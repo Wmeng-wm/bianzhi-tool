@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>编织工艺计算器｜V1.8 编织角锭数估算版</title>
+<style>
+:root{--bg:#f6f8fc;--bg2:#eef3f9;--card:#ffffffee;--line:#e5eaf2;--text:#0f172a;--muted:#64748b;--pri:#22c55e;--pri2:#16a34a}
+*{box-sizing:border-box} body{margin:0;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(180deg,var(--bg),var(--bg2))}
+.wrap{max-width:980px;margin:0 auto;padding:16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.grid,.out{grid-template-columns:1fr}}
+input,select,textarea{width:100%;padding:13px 14px;border-radius:14px;border:1px solid #d7dee8;background:#fff;color:var(--text);font-size:16px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn,.btn2,.btn3{border:none;border-radius:14px;padding:13px 16px;font-size:15px;font-weight:700}.btn{background:linear-gradient(180deg,var(--pri),var(--pri2));color:#06110a}.btn2{background:#eef2f7}.btn3{background:#fff;border:1px solid #d7dee8}
+.kpi{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:14px}.kpi .t{font-size:12px;color:var(--muted)}.kpi .v{font-size:28px;font-weight:900}.kpi .s{font-size:12px;color:#2563eb;margin-top:6px}
+textarea{min-height:180px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card"><h1 style="margin:0 0 6px">编织工艺计算器 V1.8</h1><div style="color:#64748b">编织角更新：按<strong>当前芯棒直径 + PPI + 锭数</strong>估算单丝理论编织角</div></div>
+
+  <div class="card">
+    <div class="grid">
+      <div><label>锭数</label><input id="spindles" type="number" value="24"></div>
+      <div><label>工艺</label><select id="craft"><option value="1x1">一压一</option><option value="1x2" selected>一压二</option><option value="2x2">二压二</option></select></div>
+      <div><label>芯棒直径 D（mm）</label><input id="mandrel" type="number" step="0.001" value="2.00"></div>
+      <div><label>丝径 d（mm）</label><input id="wire" type="number" step="0.001" value="0.05"></div>
+      <div><label>PPI（每英寸编织点）</label><input id="ppi" type="number" step="0.01" value="45"></div>
+      <div><label>成品长度（mm）</label><input id="length" type="number" step="0.1" value="100"></div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="row">
+      <button class="btn" onclick="calc()">计算</button>
+      <button class="btn2" onclick="copyCustomer()">复制给客户</button>
+      <button class="btn2" onclick="copyEngineer()">复制工程版</button>
+      <button class="btn3" onclick="saveInputs()">保存参数</button>
+      <button class="btn3" onclick="loadInputs()">读取参数</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="out">
+      <div class="kpi"><div class="t">稳定版用丝比</div><div class="v" id="ratio">-</div><div class="s">主结果</div></div>
+      <div class="kpi"><div class="t">编织角（V1.8）</div><div class="v" id="angle">-</div><div class="s">按芯棒+PPI+锭数估算单丝理论角</div></div>
+      <div class="kpi"><div class="t">覆盖率（参考）</div><div class="v" id="cover">-</div><div class="s">辅助判断</div></div>
+      <div class="kpi"><div class="t">每米单股理论用丝</div><div class="v" id="perMeter">-</div><div class="s">单股/1000mm</div></div>
+      <div class="kpi"><div class="t">单股总用丝</div><div class="v" id="single">-</div><div class="s">按长度计算</div></div>
+      <div class="kpi"><div class="t">机台总用丝</div><div class="v" id="total">-</div><div class="s">全部锭总和</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div><label>目标用丝比</label><input id="targetRatio" type="number" step="0.001" value="1.60"></div>
+      <div><label>目标编织角（°）</label><input id="targetAngle" type="number" step="0.01" value="55"></div>
+      <div><label>目标覆盖率（%）</label><input id="targetCover" type="number" step="0.01" value="85"></div>
+      <div style="display:flex;align-items:end"><button class="btn" style="width:100%" onclick="reverseCalc()">反推 PPI</button></div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="out">
+      <div class="kpi"><div class="t">按目标用丝比反推 PPI</div><div class="v" id="r_ppi_ratio">-</div></div>
+      <div class="kpi"><div class="t">按目标编织角反推 PPI</div><div class="v" id="r_ppi_angle">-</div></div>
+      <div class="kpi"><div class="t">按目标覆盖率反推 PPI</div><div class="v" id="r_ppi_cover">-</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <textarea id="preview"></textarea>
+  </div>
+</div>
+
+<script>
+function v(id){return parseFloat(document.getElementById(id).value||0)}
+function set(id,val){document.getElementById(id).textContent=val}
+function craftText(c){return c==='1x1'?'一压一':c==='1x2'?'一压二':'二压二'}
+function craftFactor(c){if(c==='1x1')return 1.000;if(c==='1x2')return 1.055;if(c==='2x2')return 1.095;return 1.0}
+function spindleAdj(sp){let s=1+(24-sp)*0.0025; if(s<0.90)s=0.90; if(s>1.12)s=1.12; return s}
+function stableRatio(sp,D,ppi,craft){return (1+(Math.PI*D*ppi)/(25.4*sp))*craftFactor(craft)*spindleAdj(sp)}
+
+// V1.8 编织角：按当前芯棒直径、PPI、锭数估算单丝理论编织角
+function braidAngleV18(D, ppi, sp){
+  const tanA = (Math.PI * D * ppi) / (25.4 * sp / 2);
+  return Math.atan(tanA) * 180 / Math.PI;
+}
+
+function coverRate(sp,D,d,angleDeg){
+  const C=Math.PI*(D+d); const angle=angleDeg*Math.PI/180;
+  if(C<=0||d<=0||angle<=0) return 0;
+  const eff=sp*d/Math.sin(angle);
+  return Math.min(99.9,Math.max(0,eff/C*100));
+}
+function calc(){
+  const sp=v('spindles'),D=v('mandrel'),d=v('wire'),ppi=v('ppi'),len=v('length'),craft=document.getElementById('craft').value;
+  const ratio=stableRatio(sp,D,ppi,craft);
+  const angle=braidAngleV18(D,ppi,sp);
+  const cover=coverRate(sp,D,d,angle);
+  const single=ratio*len,total=single*sp,perMeter=ratio*1000;
+  set('ratio',ratio.toFixed(3)); set('angle',angle.toFixed(1)+'°'); set('cover',cover.toFixed(1)+'%');
+  set('single',single.toFixed(1)+' mm'); set('total',total.toFixed(1)+' mm'); set('perMeter',perMeter.toFixed(0)+' mm');
+  buildPreview('customer');
+}
+function reverseCalc(){
+  const sp=v('spindles'),D=v('mandrel'),d=v('wire'),craft=document.getElementById('craft').value, tr=v('targetRatio'),ta=v('targetAngle'),tc=v('targetCover');
+  let ppi_ratio=((tr/(craftFactor(craft)*spindleAdj(sp)))-1)*(25.4*sp)/(Math.PI*D); if(!isFinite(ppi_ratio)||ppi_ratio<0) ppi_ratio=0;
+  let ppi_angle=Math.tan(ta*Math.PI/180)*(25.4*sp/2)/(Math.PI*D); if(!isFinite(ppi_angle)||ppi_angle<0) ppi_angle=0;
+  let ppi_cover=0; if(tc>0&&sp>0&&d>0&&D>0){ const C=Math.PI*(D+d); const sinA=Math.min(0.999,(sp*d)/((tc/100)*C)); if(sinA>0){ const angle=Math.asin(sinA); ppi_cover=Math.tan(angle)*25.4/(Math.PI*(D+d)); } }
+  set('r_ppi_ratio',ppi_ratio.toFixed(2)); set('r_ppi_angle',ppi_angle.toFixed(2)); set('r_ppi_cover',ppi_cover.toFixed(2)); buildPreview('customer');
+}
+function buildPreview(mode){
+ const sp=v('spindles'),D=v('mandrel'),d=v('wire'),ppi=v('ppi'),len=v('length'),craft=craftText(document.getElementById('craft').value);
+ const ratio=document.getElementById('ratio').textContent, angle=document.getElementById('angle').textContent, cover=document.getElementById('cover').textContent;
+ const single=document.getElementById('single').textContent, total=document.getElementById('total').textContent;
+ const p1=document.getElementById('r_ppi_ratio').textContent, p2=document.getElementById('r_ppi_angle').textContent, p3=document.getElementById('r_ppi_cover').textContent;
+ document.getElementById('preview').value = mode==='engineer' ? `【编织工艺工程计算】\n工艺：${craft}\n锭数：${sp}锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\nPPI：${ppi}\n成品长度：${len} mm\n\n正算结果：\n1、稳定版用丝比：${ratio}\n2、编织角（V1.8）：${angle}\n3、覆盖率：${cover}\n4、每米单股理论用丝：${document.getElementById('perMeter').textContent}\n5、单股理论总用丝：${single}\n6、机台理论总用丝：${total}\n\n反推结果：\n1、按目标用丝比反推 PPI：${p1}\n2、按目标编织角反推 PPI：${p2}\n3、按目标覆盖率反推 PPI：${p3}` :
+ `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp}锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\nPPI：${ppi}\n成品长度：${len} mm\n\n计算结果（按单股）：\n1、用丝比：${ratio}\n2、单股理论用丝：${single}\n3、机台理论总用丝：${total}\n4、编织角（V1.8）：${angle}\n5、覆盖率（参考）：${cover}`;
+}
+async function copyText(t){try{await navigator.clipboard.writeText(t);alert('已复制')}catch(e){const ta=document.getElementById('preview');ta.select();document.execCommand('copy');alert('已复制')}}
+function copyCustomer(){calc();reverseCalc();buildPreview('customer');copyText(document.getElementById('preview').value)}
+function copyEngineer(){calc();reverseCalc();buildPreview('engineer');copyText(document.getElementById('preview').value)}
+function saveInputs(){const data={spindles:spindles.value,craft:craft.value,mandrel:mandrel.value,wire:wire.value,ppi:ppi.value,length:length.value,targetRatio:targetRatio.value,targetAngle:targetAngle.value,targetCover:targetCover.value};localStorage.setItem('braid_calc_v18',JSON.stringify(data));alert('已保存参数')}
+function loadInputs(){const raw=localStorage.getItem('braid_calc_v18');if(!raw){alert('还没有保存的参数');return}const data=JSON.parse(raw);for(const k in data){if(document.getElementById(k)) document.getElementById(k).value=data[k]}calc();reverseCalc();alert('已读取参数')}
+calc(); reverseCalc();
+</script>
+</body>
+</html>
