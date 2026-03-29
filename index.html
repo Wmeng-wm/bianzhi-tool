@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>编织工艺计算器 Pro 2.0</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#111;--muted:#666;--line:#e8eaf2}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:18px}.top{position:sticky;top:0;background:rgba(246,247,251,.92);backdrop-filter:blur(10px);padding:10px 0 8px;z-index:9}
+h1{font-size:30px;margin:0 0 6px}.sub{color:var(--muted);font-size:14px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0}
+.section{font-size:18px;font-weight:800;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}@media (max-width:700px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:14px;color:#444;margin:0 0 8px} input,select,textarea{width:100%;border:1px solid #d8dcea;border-radius:14px;padding:12px 14px;font-size:16px;background:#fff}
+textarea{min-height:180px;line-height:1.6}.row{display:flex;gap:10px;flex-wrap:wrap}.seg{display:flex;background:#f0f2f7;border-radius:14px;padding:4px;border:1px solid #e1e6f2}
+.seg button{flex:1;border:none;background:transparent;border-radius:10px;padding:11px 14px;font-size:15px}.seg button.active{background:#111;color:#fff}
+.btn{border:none;border-radius:14px;padding:13px 16px;font-size:16px;font-weight:700;background:#111;color:#fff}.btn2{border:none;border-radius:14px;padding:13px 16px;font-size:16px;background:#eef2ff;color:#2748a3}
+.out{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}@media (max-width:900px){.out{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:#fafbff;border:1px solid #e7ebf5;border-radius:16px;padding:16px}.kpi .t{font-size:13px;color:#666;margin-bottom:8px}.kpi .v{font-size:30px;font-weight:800}
+.small{font-size:12px;color:#777;line-height:1.7} hr{border:none;border-top:1px solid var(--line);margin:16px 0} code{background:#f4f6fb;padding:2px 6px;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>编织工艺计算器 Pro 2.0</h1>
+    <div class="sub">默认按 <b>单股</b> 计算；工艺保留：<b>一压一 / 一压二 / 二压二</b>；新增 <b>反推 PPI / 反推编织角 / 反推覆盖率 / 按长度算总用丝</b></div>
+  </div>
+
+  <div class="card">
+    <div class="section">参数输入</div>
+    <div class="grid">
+      <div><label>编织机锭数 N</label><input id="spindles" type="number" value="16" step="1"></div>
+      <div><label>芯棒直径 D（mm）</label><input id="diameter" type="number" value="6" step="0.001"></div>
+      <div><label>PPI（每英寸编织节距数）</label><input id="ppi" type="number" value="45" step="0.001"></div>
+      <div><label>丝径 d（mm，用于角度/覆盖率）</label><input id="wire" type="number" value="0.10" step="0.001"></div>
+      <div><label>成品长度（m，用于算总用丝）</label><input id="lengthM" type="number" value="1" step="0.001"></div>
+      <div><label>目标用丝比（反推 PPI 用）</label><input id="targetRatio" type="number" value="2.5" step="0.001"></div>
+      <div><label>目标编织角（°，反推 PPI 用）</label><input id="targetAngle" type="number" value="45" step="0.1"></div>
+      <div><label>目标覆盖率（%，反推 PPI 用）</label><input id="targetCover" type="number" value="75" step="0.1"></div>
+    </div>
+
+    <div style="margin-top:14px">
+      <label>编织工艺</label>
+      <div class="seg" id="modeSeg">
+        <button class="active" data-v="1">一压一</button>
+        <button data-v="2">一压二</button>
+        <button data-v="4">二压二</button>
+      </div>
+      <div class="small" style="margin-top:8px">工艺系数 <code>k</code> 分别取 <b>1 / 2 / 4</b>。默认按<b>单股</b>输出。</div>
+    </div>
+
+    <div class="row" style="margin-top:16px">
+      <button class="btn" onclick="calc()">立即计算</button>
+      <button class="btn2" onclick="fillDemo()">示例值</button>
+      <button class="btn2" onclick="copyCustomer()">复制客户版说明</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section">正算结果</div>
+    <div class="out">
+      <div class="kpi"><div class="t">用丝比（单股）</div><div class="v" id="ratio">—</div></div>
+      <div class="kpi"><div class="t">编织角度 θ</div><div class="v" id="angle">—</div></div>
+      <div class="kpi"><div class="t">覆盖率（估算）</div><div class="v" id="cover">—</div></div>
+      <div class="kpi"><div class="t">每米单股理论用丝</div><div class="v" id="perM">—</div></div>
+      <div class="kpi"><div class="t">总单股理论用丝</div><div class="v" id="totalSingle">—</div></div>
+      <div class="kpi"><div class="t">总机台理论总用丝</div><div class="v" id="totalAll">—</div></div>
+      <div class="kpi"><div class="t">每锭总用丝</div><div class="v" id="perSpindle">—</div></div>
+      <div class="kpi"><div class="t">工艺判断</div><div class="v" id="judge">—</div></div>
+    </div>
+
+    <hr>
+
+    <div class="section">反推结果</div>
+    <div class="out">
+      <div class="kpi"><div class="t">按目标用丝比反推 PPI</div><div class="v" id="ppiByRatio">—</div></div>
+      <div class="kpi"><div class="t">按目标编织角反推 PPI</div><div class="v" id="ppiByAngle">—</div></div>
+      <div class="kpi"><div class="t">按目标覆盖率反推 PPI</div><div class="v" id="ppiByCover">—</div></div>
+      <div class="kpi"><div class="t">按当前参数反推理论角</div><div class="v" id="angleBack">—</div></div>
+    </div>
+
+    <hr>
+
+    <div class="grid">
+      <div>
+        <div class="section" style="font-size:16px">核心公式</div>
+        <div class="small">
+          1）轴向节距：<code>P = 25.4 / PPI</code>（mm）<br>
+          2）圆周：<code>C = πD</code>（mm）<br>
+          3）单股用丝比：<code>R = √(1 + (k·C / P)^2)</code><br>
+          4）编织角：<code>θ = arctan(k·C / P)</code><br>
+          5）每米单股理论用丝：<code>L = R × 1m</code>
+        </div>
+      </div>
+      <div>
+        <div class="section" style="font-size:16px">反推逻辑</div>
+        <div class="small">
+          1）已知目标用丝比 <code>R</code>，先解出 <code>P</code>，再反推 <code>PPI</code><br>
+          2）已知目标编织角 <code>θ</code>，由 <code>tanθ = k·C/P</code> 反推 <code>PPI</code><br>
+          3）覆盖率反推属于工程估算，用于现场快速调机参考，不替代最终实测。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section">客户版说明（可直接复制发送）</div>
+    <textarea id="customerText"></textarea>
+  </div>
+</div>
+
+<script>
+let modeK = 1;
+document.querySelectorAll('#modeSeg button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    modeK = Number(btn.dataset.v);
+    calc();
+  }
+});
+
+function fmt(n,d=3){ if(!isFinite(n)) return '—'; return Number(n).toFixed(d).replace(/\.?0+$/,''); }
+
+function calc(){
+  const N = Number(document.getElementById('spindles').value||0);
+  const D = Number(document.getElementById('diameter').value||0);
+  const PPI = Number(document.getElementById('ppi').value||0);
+  const d = Number(document.getElementById('wire').value||0);
+  const lengthM = Number(document.getElementById('lengthM').value||0);
+  const targetRatio = Number(document.getElementById('targetRatio').value||0);
+  const targetAngle = Number(document.getElementById('targetAngle').value||0);
+  const targetCover = Number(document.getElementById('targetCover').value||0);
+
+  if(!N || !D || !PPI){ alert('请先输入锭数、芯棒直径、PPI'); return; }
+
+  const P = 25.4 / PPI, C = Math.PI * D, X = modeK * C / P;
+  const R = Math.sqrt(1 + X*X), theta = Math.atan(X) * 180 / Math.PI;
+  const picksPerMM = PPI / 25.4;
+
+  let cover = N * d * Math.sin(theta*Math.PI/180) * picksPerMM;
+  cover = Math.max(0, Math.min(0.99, cover));
+
+  const perM = R;
+  const totalSingle = R * lengthM;
+  const totalAll = R * lengthM * N;
+  const perSpindle = R * lengthM;
+
+  let judge = '常规';
+  if(theta < 30) judge = '偏松';
+  else if(theta > 55) judge = '偏密';
+
+  // 反推 PPI
+  let ppiByRatio = NaN;
+  if(targetRatio > 1){
+    const x2 = Math.sqrt(targetRatio*targetRatio - 1);
+    ppiByRatio = x2 * 25.4 / (modeK * Math.PI * D);
+  }
+
+  let ppiByAngle = NaN;
+  if(targetAngle > 0 && targetAngle < 89){
+    ppiByAngle = Math.tan(targetAngle * Math.PI/180) * 25.4 / (modeK * Math.PI * D);
+  }
+
+  let ppiByCover = NaN;
+  if(targetCover > 0 && targetCover < 100 && d > 0){
+    const cov = targetCover / 100;
+    const sinT = Math.sin(theta * Math.PI/180);
+    if(sinT > 0){
+      ppiByCover = cov / (N * d * sinT) * 25.4;
+    }
+  }
+
+  document.getElementById('ratio').textContent = fmt(R,3);
+  document.getElementById('angle').textContent = fmt(theta,1) + '°';
+  document.getElementById('cover').textContent = fmt(cover*100,1) + '%';
+  document.getElementById('perM').textContent = fmt(perM,3) + ' m';
+  document.getElementById('totalSingle').textContent = fmt(totalSingle,3) + ' m';
+  document.getElementById('totalAll').textContent = fmt(totalAll,1) + ' m';
+  document.getElementById('perSpindle').textContent = fmt(perSpindle,3) + ' m';
+  document.getElementById('judge').textContent = judge;
+
+  document.getElementById('ppiByRatio').textContent = fmt(ppiByRatio,2);
+  document.getElementById('ppiByAngle').textContent = fmt(ppiByAngle,2);
+  document.getElementById('ppiByCover').textContent = fmt(ppiByCover,2);
+  document.getElementById('angleBack').textContent = fmt(theta,1) + '°';
+
+  const modeName = modeK===1 ? '一压一' : modeK===2 ? '一压二' : '二压二';
+
+  document.getElementById('customerText').value =
+`【编织工艺计算结果】
+编织工艺：${modeName}
+锭数：${N}锭
+芯棒直径：${fmt(D,3)} mm
+PPI：${fmt(PPI,3)}
+成品长度：${fmt(lengthM,3)} m
+
+正算结果（默认按单股）：
+1、用丝比：${fmt(R,3)}
+2、编织角度：${fmt(theta,1)}°
+3、每米单股理论用丝：${fmt(perM,3)} 米
+4、单股总用丝：${fmt(totalSingle,3)} 米
+5、机台理论总用丝：${fmt(totalAll,1)} 米
+6、覆盖率（估算）：${fmt(cover*100,1)}%
+
+反推参考：
+1、目标用丝比 ${fmt(targetRatio,3)} → 建议 PPI：${fmt(ppiByRatio,2)}
+2、目标编织角 ${fmt(targetAngle,1)}° → 建议 PPI：${fmt(ppiByAngle,2)}
+3、目标覆盖率 ${fmt(targetCover,1)}% → 建议 PPI：${fmt(ppiByCover,2)}
+
+简单理解：
+编织丝在芯棒表面走的是螺旋线，不是直线，所以实际用丝长度会大于产品长度。
+用丝比 = 实际丝长 ÷ 产品长度。`;
+}
+
+function copyCustomer(){ const t=document.getElementById('customerText'); t.select(); document.execCommand('copy'); alert('客户版说明已复制'); }
+
+function fillDemo(){
+  document.getElementById('spindles').value=16;
+  document.getElementById('diameter').value=6;
+  document.getElementById('ppi').value=45;
+  document.getElementById('wire').value=0.10;
+  document.getElementById('lengthM').value=10;
+  document.getElementById('targetRatio').value=2.5;
+  document.getElementById('targetAngle').value=45;
+  document.getElementById('targetCover').value=75;
+  modeK=2;
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#modeSeg button[data-v="2"]').classList.add('active');
+  calc();
+}
+calc();
+</script>
+</body>
+</html>
