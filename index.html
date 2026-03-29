@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>编织工艺计算器</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#111;--sub:#666;--line:#e6e8f0}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:14px 14px 28px}
+.top{position:sticky;top:0;background:rgba(246,247,251,.92);backdrop-filter: blur(10px);padding:10px 0 8px;z-index:9}
+h1{font-size:28px;margin:0 0 6px} .sub{font-size:13px;color:var(--sub);line-height:1.6}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px;box-shadow:0 8px 24px rgba(0,0,0,.05)}
+.section{font-size:18px;font-weight:700;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:14px;color:#555;margin-bottom:6px}
+input,select,textarea{width:100%;border:1px solid #d9dce7;border-radius:14px;padding:14px 12px;font-size:18px;background:#fff}
+textarea{min-height:170px;font-size:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.seg{display:flex;background:#f0f2f7;border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;border:none;border-radius:12px;padding:12px 14px;background:transparent;font-size:16px}
+.seg button.active{background:#111;color:#fff}
+.btn{border:none;border-radius:14px;padding:14px 16px;font-size:17px;background:#111;color:#fff}
+.btn2{border:none;border-radius:14px;padding:14px 16px;font-size:17px;background:#eef1f7;color:#111}
+.out{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kpi{background:#fafbff;border:1px solid #e8ebf5;border-radius:16px;padding:14px}
+.kpi .t{font-size:13px;color:#666;margin-bottom:8px}
+.kpi .v{font-size:30px;font-weight:800}
+.small{font-size:12px;color:#777;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>编织工艺计算器</h1>
+    <div class="sub">网页版：算料、调机、反推 PPI、编织角、覆盖率估算，一页完成。</div>
+  </div>
+
+  <div class="card">
+    <div class="section">① 输入参数</div>
+    <div class="grid">
+      <div><label>锭数 N</label><input id="N" type="number" value="16"></div>
+      <div><label>芯棒直径 D (mm)</label><input id="D" type="number" step="0.01" value="6"></div>
+      <div><label>PPI</label><input id="PPI" type="number" step="0.01" value="45"></div>
+      <div>
+        <label>每锭股数</label>
+        <div class="seg">
+          <button id="ply1" onclick="setPly(1)" class="active">单股</button>
+          <button id="ply2" onclick="setPly(2)">双股</button>
+          <button id="ply3" onclick="setPly(3)">三股</button>
+        </div>
+        <input id="ply" type="hidden" value="1">
+      </div>
+      <div><label>成品长度 L (m)</label><input id="L" type="number" step="0.01" value="10"></div>
+      <div><label>损耗率（0.05=5%）</label><input id="loss" type="number" step="0.01" value="0.05"></div>
+      <div><label>丝径 d (mm)</label><input id="wire" type="number" step="0.001" value="0.06"></div>
+      <div><label>组织方式</label>
+        <select id="pattern"><option>一压一</option><option selected>一压二</option><option>二压二</option><option>二压三</option></select>
+      </div>
+      <div><label>目标单股用丝比</label><input id="targetRatio" type="number" step="0.01" value="2.5"></div>
+      <div><label>目标编织角 (°)</label><input id="targetAngle" type="number" step="0.1" value="45"></div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" onclick="calc()">立即计算</button>
+      <button class="btn2" onclick="copyText()">复制客户说明</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section">② 计算结果</div>
+    <div class="out">
+      <div class="kpi"><div class="t">单股用丝比</div><div class="v" id="ratio">-</div></div>
+      <div class="kpi"><div class="t">理论编织角 (°)</div><div class="v" id="angle">-</div></div>
+      <div class="kpi"><div class="t">总用丝量 (米)</div><div class="v" id="total">-</div></div>
+      <div class="kpi"><div class="t">每锭需上丝长度 (米)</div><div class="v" id="perSpindle">-</div></div>
+      <div class="kpi"><div class="t">含损耗总备料 (米)</div><div class="v" id="totalLoss">-</div></div>
+      <div class="kpi"><div class="t">含损耗每锭备料 (米)</div><div class="v" id="perLoss">-</div></div>
+      <div class="kpi"><div class="t">按目标用丝比建议 PPI</div><div class="v" id="ppiByRatio">-</div></div>
+      <div class="kpi"><div class="t">按目标编织角建议 PPI</div><div class="v" id="ppiByAngle">-</div></div>
+      <div class="kpi"><div class="t">覆盖率估算 (%)</div><div class="v" id="cover">-</div></div>
+      <div class="kpi"><div class="t">工艺判断</div><div class="v" id="judge" style="font-size:20px">-</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section">③ 客户说明（可直接复制）</div>
+    <textarea id="customerText"></textarea>
+  </div>
+</div>
+
+<script>
+function f(n,d=2){ return isFinite(n) ? Number(n).toFixed(d) : '-' }
+function setPly(v){ document.getElementById('ply').value=v; [1,2,3].forEach(i=>document.getElementById('ply'+i).classList.toggle('active', i===v)); calc(); }
+function calc(){
+  const N = parseFloat(document.getElementById('N').value||0);
+  const D = parseFloat(document.getElementById('D').value||0);
+  const PPI = parseFloat(document.getElementById('PPI').value||0);
+  const ply = parseFloat(document.getElementById('ply').value||1);
+  const L = parseFloat(document.getElementById('L').value||0);
+  const loss = parseFloat(document.getElementById('loss').value||0);
+  const wire = parseFloat(document.getElementById('wire').value||0);
+  const pattern = document.getElementById('pattern').value;
+  const targetRatio = parseFloat(document.getElementById('targetRatio').value||0);
+  const targetAngle = parseFloat(document.getElementById('targetAngle').value||0);
+
+  const x = (Math.PI * D * PPI) / (25.4 * (N/2));
+  const ratio = Math.sqrt(1 + x*x);
+  const total = ratio * N * ply * L;
+  const perSpindle = ratio * ply * L;
+  const totalLoss = total * (1 + loss);
+  const perLoss = perSpindle * (1 + loss);
+  const angle = Math.atan(x) * 180 / Math.PI;
+  const ppiByRatio = ((Math.sqrt(targetRatio*targetRatio - 1)) * 25.4 * (N/2)) / (Math.PI * D);
+  const ppiByAngle = (Math.tan(targetAngle * Math.PI / 180) * 25.4 * (N/2)) / (Math.PI * D);
+
+  const totalEnds = N * ply;
+  const n = totalEnds / 2.0;
+  const sinTheta = Math.sin(angle * Math.PI / 180);
+  let cover = (2*n*wire)/(Math.PI*D*sinTheta) - Math.pow((n*wire)/(Math.PI*D*sinTheta),2);
+  cover = Math.max(0, Math.min(1, cover)) * 100;
+
+  let judge = "常用工艺区间";
+  if(angle < 30 || ratio < 2) judge = "偏松 / 省丝";
+  else if(angle > 45 || ratio > 4) judge = "偏密 / 吃丝";
+
+  document.getElementById('ratio').textContent = f(ratio,2);
+  document.getElementById('angle').textContent = f(angle,1);
+  document.getElementById('total').textContent = f(total,1);
+  document.getElementById('perSpindle').textContent = f(perSpindle,1);
+  document.getElementById('totalLoss').textContent = f(totalLoss,1);
+  document.getElementById('perLoss').textContent = f(perLoss,1);
+  document.getElementById('ppiByRatio').textContent = f(ppiByRatio,1);
+  document.getElementById('ppiByAngle').textContent = f(ppiByAngle,1);
+  document.getElementById('cover').textContent = f(cover,1);
+  document.getElementById('judge').textContent = judge;
+
+  document.getElementById('customerText').value =
+`编织用丝量计算说明：
+
+参数：
+- 锭数：${N}
+- 芯棒直径：${D} mm
+- PPI：${PPI}
+- 每锭股数：${ply}
+- 丝径：${wire} mm
+- 成品长度：${L} m
+- 组织：${pattern}
+
+结果：
+- 单股用丝比 ≈ ${f(ratio,2)}
+- 理论编织角 ≈ ${f(angle,1)}°
+- 覆盖率估算 ≈ ${f(cover,1)}%
+- 总用丝量 ≈ ${f(total,1)} 米
+- 每锭需上丝长度 ≈ ${f(perSpindle,1)} 米
+- 含损耗总备料 ≈ ${f(totalLoss,1)} 米
+- 含损耗每锭备料 ≈ ${f(perLoss,1)} 米
+
+反推参考：
+- 目标单股用丝比 ${targetRatio} 时，建议 PPI ≈ ${f(ppiByRatio,1)}
+- 目标编织角 ${targetAngle}° 时，建议 PPI ≈ ${f(ppiByAngle,1)}
+
+备注：建议结合实际生产预留 ${f(loss*100,0)}% 损耗。`;
+}
+function copyText(){ const t=document.getElementById('customerText'); t.select(); t.setSelectionRange(0,99999); document.execCommand('copy'); alert('已复制客户说明'); }
+calc();
+</script>
+</body>
+</html>
