@@ -223,7 +223,7 @@ document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 
 // Override copyText with watermark
 async function copyText(t){
-  const watermark = "\\n\\n—— 数据由恒辉王萌编织工艺工具生成";
+  const watermark = "\\n\\n—— 数据由王萌编织工艺工具生成";
   const finalText = (t || '') + watermark;
   try{
     await navigator.clipboard.writeText(finalText);
@@ -240,6 +240,6 @@ async function copyText(t){
 initAccess();
 calc(); reverseCalc();
 </script>
-<div class="footer-note">© 恒辉王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
+<div class="footer-note">© 王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
 </body>
 </html>
