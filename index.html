@@ -8,7 +8,8 @@
 :root{--bg:#f6f8fc;--card:#fff;--line:#e5eaf2;--text:#0f172a;--muted:#64748b;--pri:#22c55e}
 *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
 .wrap{max-width:980px;margin:0 auto;padding:16px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+/* 修改了这里：将 repeat(3, ...) 改为 repeat(2, ...) 实现一行两个 */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.out{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media (max-width:700px){.grid,.out{grid-template-columns:1fr}}
 input,select,textarea{width:100%;padding:13px 14px;border-radius:14px;border:1px solid #d7dee8;background:#fff;color:var(--text);font-size:16px; transition: border 0.2s;}
 input:focus, select:focus {outline: none; border-color: var(--pri);}
@@ -40,7 +41,7 @@ textarea{min-height:220px; line-height: 1.5;}
   <div class="card">
     <h1 style="margin:0 0 6px">编织工艺计算器</h1>
     <div style="color:#64748b; line-height: 1.6;">
-      V2.8版本，加入联动反推装置。<br>
+      V2.9版本，新增编织角反推，结果看板双列布局。<br>
       <span style="color:#2563eb; font-weight: 500;">由王萌开发｜仅内部授权使用</span>
     </div>
   </div>
@@ -49,15 +50,18 @@ textarea{min-height:220px; line-height: 1.5;}
     <div class="grid">
       <div><label>锭数</label><input id="spindles" type="number" value="144" oninput="sync('ppi')"></div>
       <div><label>工艺</label><select id="craft" onchange="sync('ppi')"><option value="1x1">一压一</option><option value="1x2" selected>一压二</option><option value="2x2">二压二</option></select></div>
-      <div><label>芯棒直径 D（mm）</label><input id="mandrel" type="number" step="0.001" value="8"></div>
+      <div><label>芯棒直径 D（mm）</label><input id="mandrel" type="number" step="0.001" value="8" oninput="sync('ppi')"></div>
       <div><label>丝径 d（mm）</label><input id="wire" type="number" step="0.001" value="0.03"></div>
-      <div><label>PPI（输入正算节距）</label><input id="ppi" type="number" step="0.01" value="55" oninput="sync('ppi')"></div>
-      <div><label>节距 Pitch (mm)（输入反推PPI）</label><input id="pitchIn" type="number" step="0.01" value="" style="background:#f0fdf4; border-color:#86efac;" oninput="sync('pitch')"></div>
+      
+      <div><label>PPI（正算基准）</label><input id="ppi" type="number" step="0.01" value="55" oninput="sync('ppi')"></div>
+      <div><label>节距 Pitch (mm)（输入反推）</label><input id="pitchIn" type="number" step="0.01" value="" style="background:#f0fdf4; border-color:#86efac;" oninput="sync('pitch')"></div>
+      <div><label>编织夹角 (°)（输入反推）</label><input id="angleIn" type="number" step="0.01" value="" style="background:#e0f2fe; border-color:#7dd3fc;" oninput="sync('angle')"></div>
+      
       <div><label>成品长度（mm）</label><input id="length" type="number" step="0.1" value="400000"></div>
     </div>
     <div style="height:12px"></div>
     <div class="row">
-      <button class="btn" onclick="calc()">计算</button>
+      <button class="btn" onclick="calc()">计算结果</button>
       <button class="btn2" onclick="copyCustomer()">复制给客户</button>
       <button class="btn2" onclick="copyEngineer()">复制工程版</button>
     </div>
@@ -79,7 +83,7 @@ textarea{min-height:220px; line-height: 1.5;}
 
 <script>
 const AUTH_CODES = {"WM-NEIBU": {name:"内部", days:3650}};
-const AUTH_KEY = "braid_tool_auth_v28";
+const AUTH_KEY = "braid_tool_auth_v29";
 function formatExpire(ts){ const d=new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function verifyAccess(){ const code=(document.getElementById('authCode').value||'').trim(); const msg=document.getElementById('authMsg'); if(AUTH_CODES[code]){ const cfg=AUTH_CODES[code]; const expireAt=Date.now()+(cfg.days||7)*24*60*60*1000; localStorage.setItem(AUTH_KEY, JSON.stringify({code,name:cfg.name,expireAt})); document.getElementById('authGate').style.display='none'; alert(`授权成功\n用户：${cfg.name}\n有效期至：${formatExpire(expireAt)}`);} else { msg.textContent='授权码错误，请重新输入'; } }
 (function initAccess(){ try{ const raw=localStorage.getItem(AUTH_KEY); if(raw){ const data=JSON.parse(raw); if(data && data.expireAt && Date.now()<data.expireAt){ document.getElementById('authGate').style.display='none'; } else { localStorage.removeItem(AUTH_KEY); } } }catch(e){} })();
@@ -96,21 +100,47 @@ function getPitchDivisor(craft) {
   return 1;
 }
 
-// PPI与节距双向反推核心联动逻辑
+// PPI、节距、角度 三向联动反推核心逻辑
 function sync(source) {
   const sp = v('spindles') || 144;
+  const D = v('mandrel') || 8;
   const craft = document.getElementById('craft').value;
   const divisor = getPitchDivisor(craft);
   
   if (source === 'ppi') {
      const p = v('ppi');
      if(p > 0) {
-       document.getElementById('pitchIn').value = ((sp / divisor) * (25.4 / p)).toFixed(2);
+       // 推节距
+       const pitch = (sp / divisor) * (25.4 / p);
+       document.getElementById('pitchIn').value = pitch.toFixed(2);
+       // 推角度
+       let tanA = (Math.PI * D) / pitch;
+       let angle = Math.atan(tanA) * 180 / Math.PI * 2;
+       document.getElementById('angleIn').value = angle.toFixed(2);
      }
   } else if (source === 'pitch') {
      const pt = v('pitchIn');
      if(pt > 0) {
-       document.getElementById('ppi').value = ((sp / divisor) * (25.4 / pt)).toFixed(2);
+       // 推PPI
+       const ppi = (sp / divisor) * (25.4 / pt);
+       document.getElementById('ppi').value = ppi.toFixed(2);
+       // 推角度
+       let tanA = (Math.PI * D) / pt;
+       let angle = Math.atan(tanA) * 180 / Math.PI * 2;
+       document.getElementById('angleIn').value = angle.toFixed(2);
+     }
+  } else if (source === 'angle') {
+     const ang = v('angleIn');
+     if(ang > 0 && ang < 180) {
+       let tanA = Math.tan((ang / 2) * Math.PI / 180);
+       if(tanA > 0) {
+           // 推节距
+           const pitch = (Math.PI * D) / tanA;
+           document.getElementById('pitchIn').value = pitch.toFixed(2);
+           // 推PPI
+           const ppi = (sp / divisor) * (25.4 / pitch);
+           document.getElementById('ppi').value = ppi.toFixed(2);
+       }
      }
   }
 }
@@ -215,5 +245,5 @@ function copyEngineer(){calc();buildPreview('engineer');copyText(document.getEle
 sync('ppi');
 calc();
 </script>
-<div class="footer-note">© 王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
+<div class="footer-note">© 恒辉王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
 </body></html>
