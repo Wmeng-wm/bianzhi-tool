@@ -35,7 +35,7 @@ textarea{min-height:180px}
 </div>
 
 <div class="wrap">
-  <div class="card"><h1 style="margin:0 0 6px">编织工艺计算器</h1><div style="color:#64748b">已更新至V2.6，修复工艺系数联动逻辑。</div></div>
+  <div class="card"><h1 style="margin:0 0 6px">编织工艺计算器</h1><div style="color:#64748b">已更新至V2.7，修正1压2节距系数。</div></div>
 
   <div class="card">
     <div class="grid">
@@ -81,9 +81,9 @@ function craftText(c){return c==='1x1'?'一压一':c==='1x2'?'一压二':'二压
 
 // 获取不同工艺对应的节距系数(Divisor)
 function getPitchDivisor(craft) {
-  if (craft === '1x1') return 4; // 1压1交叉最密，标准系数为4（对齐图一数据的关键）
+  if (craft === '1x1') return 4; // 1压1交叉最密，标准系数为4
   if (craft === '2x2') return 2; // 2压2交叉较疏，标准系数通常为2
-  if (craft === '1x2') return 1; // 1压2此处恢复您旧版代码里的“纯几何”基准系数1
+  if (craft === '1x2') return 2; // 【V2.7修正】1压2系数也应为2
   return 1;
 }
 
@@ -108,10 +108,8 @@ function theoryRatio(D, ppi, sp, craft){
 }
 
 // 稳定版用丝比：因为底层的角度算法已经区分了工艺，这里直接拿准确的理论值即可。
-// 如果实际生产中某特定工艺仍然存在额外“起伏损耗”，您可以直接在这里用乘数微调。
 function stableRatio(sp, D, ppi, craft){
   let base = theoryRatio(D, ppi, sp, craft);
-  // 例如：若一压一实际加工还会多耗损 2%，可改为 if(craft === '1x1') return base * 1.02; 
   return base;
 }
 
