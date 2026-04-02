@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>编织工艺计算器</title>
+<style>
+:root{--bg:#f6f8fc;--bg2:#eef3f9;--card:#ffffff;--text:#0f172a;--muted:#64748b;--line:#e5eaf2;--green:#22c55e;--green2:#16a34a}
+*{box-sizing:border-box}body{margin:0;color:var(--text);background:linear-gradient(180deg,var(--bg),var(--bg2));font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:16px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.out{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.grid,.out{grid-template-columns:1fr}}
+input,select,textarea{width:100%;padding:13px 14px;border-radius:14px;border:1px solid #d7dee8;background:#fff;color:var(--text);font-size:16px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}.row{display:flex;gap:10px;flex-wrap:wrap}
+.btn,.btn2,.btn3{border:none;border-radius:14px;padding:13px 16px;font-size:15px;font-weight:700}.btn{background:linear-gradient(180deg,var(--green),var(--green2));color:#06110a}.btn2{background:#eef2f7;color:#2563eb}.btn3{background:#fff;border:1px solid #d7dee8;color:#2563eb}
+.kpi{background:#fff;border:1px solid #e5eaf2;border-radius:18px;padding:14px}.kpi .t{font-size:12px;color:var(--muted)}.kpi .v{font-size:28px;font-weight:900}.kpi .s{font-size:12px;color:#2563eb;margin-top:6px}
+textarea{min-height:180px}
+.auth-wrap{position:fixed;inset:0;background:linear-gradient(180deg,var(--bg),var(--bg2));display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px}
+.auth-card{max-width:460px;width:100%;background:#fff;border:1px solid #e5eaf2;border-radius:20px;padding:22px;box-shadow:0 10px 30px rgba(15,23,42,.08)}
+.auth-title{font-size:28px;font-weight:800;margin-bottom:8px}.auth-sub{color:#64748b;font-size:14px;line-height:1.8;margin-bottom:14px}.auth-tip{font-size:12px;color:#64748b;margin-top:10px}
+.footer-note{color:#64748b;font-size:12px;text-align:center;padding:8px 0 24px}
+</style>
+</head>
+<body>
+<div id="authGate" class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-title">编织工艺计算器</div>
+    <div class="auth-sub">请输入授权码后使用。授权通过后，本机将自动记住 365 天。</div>
+    <label>授权码</label>
+    <input id="authCode" type="password" placeholder="请输入授权码">
+    <div style="height:12px"></div>
+    <div class="row">
+      <button id="authBtn" class="btn" style="width:100%">进入工具</button>
+    </div>
+    <div id="authMsg" class="auth-tip">仅授权用户可使用，未经允许禁止外传。</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="card"><h1 style="margin:0 0 6px">编织工艺计算器</h1><div style="color:#64748b">已更新至V2.4.7，修正部分错误。</div></div>
+  <div class="card">
+    <div class="grid">
+      <div><label>锭数</label><input id="spindles" type="number" value="24"></div>
+      <div><label>工艺</label><select id="craft"><option value="1x1">一压一</option><option value="1x2" selected>一压二</option><option value="2x2">二压二</option></select></div>
+      <div><label>芯棒直径 D（mm）</label><input id="mandrel" type="number" step="0.001" value="1.25"></div>
+      <div><label>丝径 d（mm）</label><input id="wire" type="number" step="0.001" value="0.127"></div>
+      <div><label>PPI（每英寸编织点）</label><input id="ppi" type="number" step="0.01" value="35"></div>
+      <div><label>成品长度（mm）</label><input id="length" type="number" step="0.1" value="1000"></div>
+    </div>
+    <div style="height:12px"></div>
+    <div class="row">
+      <button class="btn" onclick="calc()">计算</button>
+      <button class="btn2" onclick="copyCustomer()">复制给客户</button>
+      <button class="btn2" onclick="copyEngineer()">复制工程版</button>
+      <button class="btn3" onclick="saveInputs()">保存参数</button>
+      <button class="btn3" onclick="loadInputs()">读取参数</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="out">
+      <div class="kpi"><div class="t">稳定版用丝比</div><div class="v" id="ratio">-</div><div class="s">主结果</div></div>
+      <div class="kpi"><div class="t">编织角</div><div class="v" id="angle">-</div><div class="s">按芯棒+PPI+锭数估算</div></div>
+      <div class="kpi"><div class="t">覆盖率（参考）</div><div class="v" id="cover">-</div><div class="s">辅助判断</div></div>
+      <div class="kpi"><div class="t">单股总用丝</div><div class="v" id="single">-</div><div class="s">按长度计算</div></div>
+      <div class="kpi"><div class="t">机台总用丝</div><div class="v" id="total">-</div><div class="s">全部锭总和</div></div>
+      <div class="kpi"><div class="t">反推PPI（输入目标角）</div><div class="v" id="backPpi">-</div><div class="s">保留反推</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div><label>反推目标角（°）</label><input id="targetAngle" type="number" step="0.1" value="45"></div>
+      <div><label>反推结果说明</label><input id="backInfo" type="text" value="按当前芯棒直径和锭数反推PPI" readonly></div>
+    </div>
+  </div>
+
+  <div class="card"><textarea id="preview"></textarea></div>
+</div>
+<div class="footer-note">© 恒辉王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
+
+<script>
+const AUTH_CODES = {
+  "WM-NEIBU-001": {name:"内部", days:365},
+  "WM-VIP-001": {name:"VIP", days:365}
+};
+const AUTH_KEY = "braid_tool_auth_v247";
+
+function spindleAdj(sp){
+  sp = Number(sp)||24;
+  if(sp<=8) return 1.00;
+  if(sp<=12) return 1.01;
+  if(sp<=16) return 1.02;
+  if(sp<=24) return 1.03;
+  if(sp<=32) return 1.04;
+  if(sp<=48) return 1.05;
+  if(sp<=96) return 1.06;
+  return 1.07;
+}
+function braidAngleLocked(D, ppi, sp){
+  let tanA = (Math.PI * D * ppi) / (25.4 * sp);
+  return Math.atan(tanA) * 180 / Math.PI;
+}
+function stableRatio(sp,D,ppi,craft){
+  // 保留你原来的经验框架，不再乱改成纯理论版
+  let base12 = (1 + (Math.PI * D * ppi) / (25.4 * sp)) * 1.055 * spindleAdj(sp);
+  if(craft === '1x1') return base12 * 1.5;
+  if(craft === '1x2') return base12;
+  if(craft === '2x2') return (1 + (Math.PI * D * ppi) / (25.4 * sp)) * 1.095 * spindleAdj(sp);
+  return base12;
+}
+function coverRate(sp,D,d,angleDeg){
+  const C=Math.PI*(D+d), angle=angleDeg*Math.PI/180;
+  if(C<=0||d<=0||angle<=0) return 0;
+  const eff=sp*d/Math.sin(angle);
+  return Math.min(99.9,Math.max(0,eff/C*100));
+}
+function craftText(c){return c==='1x1'?'一压一':c==='1x2'?'一压二':'二压二'}
+function calc(){
+  const sp=+document.getElementById('spindles').value||0;
+  const D=+document.getElementById('mandrel').value||0;
+  const d=+document.getElementById('wire').value||0;
+  const ppi=+document.getElementById('ppi').value||0;
+  const len=+document.getElementById('length').value||0;
+  const craft=document.getElementById('craft').value;
+  const ratio=stableRatio(sp,D,ppi,craft);
+  const angle=braidAngleLocked(D,ppi,sp);
+  const cover=coverRate(sp,D,d,angle);
+  const single=ratio*len, total=single*sp;
+  const ta=+document.getElementById('targetAngle').value||0;
+  const backPpi = Math.tan(ta*Math.PI/180) * 25.4 * sp / (Math.PI * D);
+
+  document.getElementById('ratio').textContent=ratio.toFixed(3);
+  document.getElementById('angle').textContent=angle.toFixed(1)+'°';
+  document.getElementById('cover').textContent=cover.toFixed(1)+'%';
+  document.getElementById('single').textContent=single.toFixed(1)+' mm';
+  document.getElementById('total').textContent=total.toFixed(1)+' mm';
+  document.getElementById('backPpi').textContent=isFinite(backPpi)?backPpi.toFixed(2):'-';
+
+  document.getElementById('preview').value =
+`【编织工艺参数参考】
+工艺：${craftText(craft)}
+锭数：${sp}锭
+芯棒直径：${D.toFixed(3)} mm
+丝径：${d.toFixed(3)} mm
+PPI：${ppi}
+成品长度：${len} mm
+
+计算结果：
+1、稳定版用丝比：${ratio.toFixed(3)}
+2、编织角：${angle.toFixed(1)}°
+3、单股理论总用丝：${single.toFixed(1)} mm
+4、机台理论总用丝：${total.toFixed(1)} mm
+5、覆盖率（参考）：${cover.toFixed(1)}%
+6、反推PPI（目标角${ta}°）：${isFinite(backPpi)?backPpi.toFixed(2):'-'}`;
+}
+function saveInputs(){
+  const data = {
+    spindles:document.getElementById('spindles').value,
+    craft:document.getElementById('craft').value,
+    mandrel:document.getElementById('mandrel').value,
+    wire:document.getElementById('wire').value,
+    ppi:document.getElementById('ppi').value,
+    length:document.getElementById('length').value,
+    targetAngle:document.getElementById('targetAngle').value
+  };
+  localStorage.setItem('braid_inputs_v247', JSON.stringify(data));
+  alert('参数已保存');
+}
+function loadInputs(){
+  try{
+    const raw=localStorage.getItem('braid_inputs_v247');
+    if(!raw){ alert('没有保存的参数'); return; }
+    const d=JSON.parse(raw);
+    Object.keys(d).forEach(k=>{ const el=document.getElementById(k); if(el) el.value=d[k]; });
+    calc();
+    alert('参数已读取');
+  }catch(e){ alert('读取失败'); }
+}
+function copyText(txt){
+  const finalText = txt + "\n\n—— 数据由恒辉王萌编织工艺工具生成";
+  navigator.clipboard.writeText(finalText).then(()=>alert('已复制')).catch(()=>{
+    const t=document.getElementById('preview'); t.value=finalText; t.select(); document.execCommand('copy'); alert('已复制');
+  });
+}
+function copyCustomer(){ calc(); copyText(document.getElementById('preview').value); }
+function copyEngineer(){ calc(); copyText("【编织工艺工程计算】\n" + document.getElementById('preview').value); }
+
+function verifyAccess(){
+  const code = (document.getElementById("authCode").value || "").trim();
+  const msg = document.getElementById("authMsg");
+  const gate = document.getElementById("authGate");
+  if(AUTH_CODES[code]){
+    const expireAt = Date.now() + 365*24*60*60*1000;
+    localStorage.setItem(AUTH_KEY, JSON.stringify({code, expireAt}));
+    gate.style.display = "none";
+    msg.textContent = "授权成功";
+    alert("授权成功");
+  }else{
+    msg.textContent = "授权码错误";
+    alert("授权码错误");
+  }
+}
+document.addEventListener("DOMContentLoaded", function(){
+  const btn = document.getElementById("authBtn");
+  const input = document.getElementById("authCode");
+  if(btn){ btn.onclick = verifyAccess; }
+  if(input){
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){ verifyAccess(); }
+    });
+  }
+  try{
+    const raw = localStorage.getItem(AUTH_KEY);
+    if(raw){
+      const data = JSON.parse(raw);
+      if(Date.now() < data.expireAt){
+        document.getElementById("authGate").style.display = "none";
+      }
+    }
+  }catch(e){}
+  calc();
+});
+</script>
+</body>
+</html>
