@@ -15,37 +15,36 @@
 }
 *{box-sizing:border-box} 
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased;}
-.wrap{max-width:980px;margin:0 auto;padding:24px 16px}
+.wrap{max-width:980px;margin:0 auto;padding:20px 12px}
 
 /* 卡片弥散阴影高级感 */
-.card{background:var(--card);border-radius:24px;padding:28px;margin-bottom:20px;box-shadow:0 8px 30px rgba(15,23,42,0.04);border:none;}
+.card{background:var(--card);border-radius:24px;padding:24px 20px;margin-bottom:16px;box-shadow:0 8px 30px rgba(15,23,42,0.04);border:none;}
 
-/* 全局一行两个的对称布局 */
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.out{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-@media (max-width:700px){.grid,.out{grid-template-columns:1fr}}
+/* 【核心修改】：去掉了手机端的折叠代码，强制全局一行两个 */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.out{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 
-/* 输入框微光与拟物交互 */
-input,select,textarea{width:100%;padding:15px 18px;border-radius:16px;background:#f8fafc;border:2px solid transparent;color:var(--text);font-size:16px;font-weight:500;transition:all 0.25s ease;}
+/* 输入框微光与拟物交互，微调了手机端并排时的内边距 */
+input,select,textarea{width:100%;padding:12px 12px;border-radius:14px;background:#f8fafc;border:2px solid transparent;color:var(--text);font-size:15px;font-weight:500;transition:all 0.25s ease;}
 input:focus,select:focus,textarea:focus{outline:none;background:#fff;border-color:var(--pri);box-shadow:0 0 0 4px rgba(34,197,94,0.12);}
-label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;font-weight:500;}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
 
 /* 三大联动框的色彩暗示 */
 #ppi {background: #fffbeb;} #ppi:focus {border-color: #fbd38d; box-shadow: 0 0 0 4px rgba(251,211,141,0.15);}
 #pitchIn {background: #f0fdf4;} #pitchIn:focus {border-color: #4ade80; box-shadow: 0 0 0 4px rgba(74,222,128,0.15);}
 #angleIn {background: #f0f9ff;} #angleIn:focus {border-color: #38bdf8; box-shadow: 0 0 0 4px rgba(56,189,248,0.15);}
 
-.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
 .btn,.btn2{border:none;border-radius:14px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s ease;}
 .btn{background:var(--pri);color:#fff;box-shadow:0 4px 12px rgba(34,197,94,0.25);}.btn:hover{background:var(--pri-hover);transform:translateY(-1px);box-shadow:0 6px 16px rgba(34,197,94,0.3);}
 .btn2{background:#f1f5f9;color:#334155;}.btn2:hover{background:#e2e8f0;transform:translateY(-1px);}
 
 /* 结果大屏卡片交互动效 */
-.kpi{background:#f8fafc;border-radius:20px;padding:20px;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);border:1px solid rgba(0,0,0,0.02);}
+.kpi{background:#f8fafc;border-radius:18px;padding:16px;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);border:1px solid rgba(0,0,0,0.02);}
 .kpi:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(15,23,42,0.06);background:#fff;}
-.kpi .t{font-size:13px;color:var(--muted);font-weight:500;}
-.kpi .v{font-size:32px;font-weight:900;margin:6px 0;letter-spacing:-0.5px;}
-.kpi .s{font-size:12px;color:#3b82f6;}
+.kpi .t{font-size:12px;color:var(--muted);font-weight:500;}
+.kpi .v{font-size:24px;font-weight:900;margin:6px 0;letter-spacing:-0.5px;}
+.kpi .s{font-size:11px;color:#3b82f6;}
 
 /* 核心主结果专属高亮涂装 */
 .kpi-primary {background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #bbf7d0;}
@@ -54,10 +53,10 @@ label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;font-wei
 .kpi-primary .v {color: #14532d;}
 .kpi-primary .s {color: #059669;}
 
-textarea{min-height:220px; line-height: 1.6; font-size: 15px;}
+textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
 .auth-wrap{position:fixed;inset:0;background:linear-gradient(180deg,#f6f8fc,#eef3f9);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;backdrop-filter:blur(8px);}
 .auth-card{max-width:460px;width:100%;background:#fff;border-radius:24px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,0.08);border:none;}
-.auth-title{font-size:28px;font-weight:800;margin-bottom:12px}.auth-sub{color:#64748b;font-size:14px;line-height:1.8;margin-bottom:20px}.auth-tip{font-size:12px;color:#94a3b8;margin-top:16px;text-align:center;}
+.auth-title{font-size:26px;font-weight:800;margin-bottom:12px}.auth-sub{color:#64748b;font-size:14px;line-height:1.8;margin-bottom:20px}.auth-tip{font-size:12px;color:#94a3b8;margin-top:16px;text-align:center;}
 .footer-note{color:#94a3b8;font-size:13px;text-align:center;padding:10px 0 30px; font-weight: 500;}
 </style>
 </head>
@@ -74,10 +73,10 @@ textarea{min-height:220px; line-height: 1.6; font-size: 15px;}
 </div>
 
 <div class="wrap">
-  <div class="card" style="padding-bottom: 24px;">
-    <h1 style="margin:0 0 8px; font-size:26px; letter-spacing:-0.5px;">编织工艺计算器</h1>
-    <div style="color:#64748b; line-height: 1.6; font-size:14px;">
-      V3.0 美化尊享版，引入空间美学排版与微交互动效。<br>
+  <div class="card" style="padding-bottom: 20px;">
+    <h1 style="margin:0 0 8px; font-size:24px; letter-spacing:-0.5px;">编织工艺计算器</h1>
+    <div style="color:#64748b; line-height: 1.6; font-size:13px;">
+      V3.1 版本，强制全局并排布局，精简功能。<br>
       <span style="color:#3b82f6; font-weight: 600;">由王萌开发｜仅内部授权使用</span>
     </div>
   </div>
@@ -98,8 +97,7 @@ textarea{min-height:220px; line-height: 1.6; font-size: 15px;}
     <div style="height:8px"></div>
     <div class="row">
       <button class="btn" onclick="calc()">立即计算</button>
-      <button class="btn2" onclick="copyCustomer()">一键复制 (客户版)</button>
-      <button class="btn2" onclick="copyEngineer()">一键复制 (工程版)</button>
+      <button class="btn2" onclick="copyCustomer()">一键复制并生成报告</button>
     </div>
   </div>
 
@@ -148,7 +146,7 @@ textarea{min-height:220px; line-height: 1.6; font-size: 15px;}
 
 <script>
 const AUTH_CODES = {"WM-NEIBU": {name:"内部", days:3650}};
-const AUTH_KEY = "braid_tool_auth_v30";
+const AUTH_KEY = "braid_tool_auth_v31";
 function formatExpire(ts){ const d=new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function verifyAccess(){ const code=(document.getElementById('authCode').value||'').trim(); const msg=document.getElementById('authMsg'); if(AUTH_CODES[code]){ const cfg=AUTH_CODES[code]; const expireAt=Date.now()+(cfg.days||7)*24*60*60*1000; localStorage.setItem(AUTH_KEY, JSON.stringify({code,name:cfg.name,expireAt})); document.getElementById('authGate').style.display='none'; alert(`授权成功\n欢迎使用，${cfg.name}用户！\n有效期至：${formatExpire(expireAt)}`);} else { msg.textContent='授权码错误，请重新输入或联系开发者'; } }
 (function initAccess(){ try{ const raw=localStorage.getItem(AUTH_KEY); if(raw){ const data=JSON.parse(raw); if(data && data.expireAt && Date.now()<data.expireAt){ document.getElementById('authGate').style.display='none'; } else { localStorage.removeItem(AUTH_KEY); } } }catch(e){} })();
@@ -234,35 +232,16 @@ function calc(){
   set('theory',theo.toFixed(3));
   set('single',single.toFixed(1));
   set('total',totalM.toFixed(2)+' m'); 
-  buildPreview('customer');
+  buildPreview();
 }
 
-function buildPreview(mode){
+function buildPreview(){
  const sp=v('spindles'),D=v('mandrel'),d=v('wire'),ppi=v('ppi'),len=v('length'),craft=craftText(document.getElementById('craft').value);
- const ratio=document.getElementById('ratio').textContent, angle=document.getElementById('angle').textContent, theo=document.getElementById('theory').textContent;
+ const ratio=document.getElementById('ratio').textContent, angle=document.getElementById('angle').textContent;
  const pitchOut=document.getElementById('pitchOut').textContent;
  const single=document.getElementById('single').textContent, total=document.getElementById('total').textContent;
  
- document.getElementById('preview').value = mode==='engineer' ? 
-`【编织工艺工程计算】
-工艺：${craft}
-锭数：${sp} 锭
-芯棒直径：${D.toFixed(3)} mm
-丝径：${d.toFixed(3)} mm
-目数：${ppi} PPI
-节距：${pitchOut} mm
-成品长度：${len} mm
-
-正算结果：
-1、稳定版用丝比：${ratio}
-2、编织夹角：${angle}
-3、理论用丝比：${theo}
-4、单股理论总用丝：${single} mm
-5、机台理论总用丝：${total}
-
-工程说明：此用丝比基于不同工艺的专属几何结构运算得出。机台总用丝单位已自动换算为米 (m)。` :
-
-`【编织工艺参数参考】
+ document.getElementById('preview').value = `【编织工艺参数参考】
 工艺：${craft}
 锭数：${sp} 锭
 芯棒直径：${D.toFixed(3)} mm
@@ -279,11 +258,10 @@ function buildPreview(mode){
 }
 
 async function copyText(t){ const finalText=(t||'')+"\n\n—— 王萌开发｜内部授权使用"; try{ await navigator.clipboard.writeText(finalText); alert('已复制到剪贴板'); }catch(e){ const ta=document.getElementById('preview'); ta.value=finalText; ta.select(); document.execCommand('copy'); alert('已复制到剪贴板'); } }
-function copyCustomer(){calc();buildPreview('customer');copyText(document.getElementById('preview').value)}
-function copyEngineer(){calc();buildPreview('engineer');copyText(document.getElementById('preview').value)}
+function copyCustomer(){calc();buildPreview();copyText(document.getElementById('preview').value)}
 
 sync('ppi');
 calc();
 </script>
-<div class="footer-note">© 恒辉王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
+<div class="footer-note">© 王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
 </body></html>
