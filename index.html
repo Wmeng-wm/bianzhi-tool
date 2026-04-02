@@ -167,9 +167,56 @@ function loadInputs(){const raw=localStorage.getItem('braid_calc_v21');if(!raw){
 
 const AUTH_CODES = {
   "WM-NEIBU-001": {name:"内部", days:365},
-  "WM-VIP-001": {name:"VIP", days:365},
+  "WM-VIP-001": {name:"VIP", days:365}
 };
-const AUTH_KEY = "braid_tool_auth_v24";
+
+const AUTH_KEY = "braid_tool_auth_v246";
+
+function verifyAccess(){
+  const code = (document.getElementById("authCode").value || "").trim();
+  const msg = document.getElementById("authMsg");
+  const gate = document.getElementById("authGate");
+
+  if(AUTH_CODES[code]){
+    const expireAt = Date.now() + 365*24*60*60*1000;
+    localStorage.setItem(AUTH_KEY, JSON.stringify({code, expireAt}));
+
+    gate.style.display = "none";
+    msg.textContent = "授权成功";
+    alert("授权成功");
+  }else{
+    msg.textContent = "授权码错误";
+    alert("授权码错误");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  const btn = document.getElementById("authBtn");
+  const input = document.getElementById("authCode");
+
+  if(btn){
+    btn.onclick = verifyAccess;
+  }
+
+  if(input){
+    input.addEventListener("keydown", function(e){
+      if(e.key === "Enter"){
+        verifyAccess();
+      }
+    });
+  }
+
+  // 自动登录
+  try{
+    const raw = localStorage.getItem(AUTH_KEY);
+    if(raw){
+      const data = JSON.parse(raw);
+      if(Date.now() < data.expireAt){
+        document.getElementById("authGate").style.display = "none";
+      }
+    }
+  }catch(e){}
+});
 
 function hasValidAccess(){
   try{
@@ -189,53 +236,7 @@ function formatExpire(ts){
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
-function verifyAccess(){
-  const code = (document.getElementById('authCode').value || '').trim();
-  const msg = document.getElementById('authMsg');
-  if(AUTH_CODES[code]){
-    saveAccess(code);
-    const raw = JSON.parse(localStorage.getItem(AUTH_KEY));
-    document.getElementById('authGate').style.display = 'none';
-    msg.textContent = '授权成功';
-    alert(`授权成功\n用户：${raw.name}\n有效期至：${formatExpire(raw.expireAt)}`);
-  }else{
-    msg.textContent = '授权码错误，请重新输入';
-  }
-}
-function initAccess(){
-  const gate = document.getElementById('authGate');
-  const msg = document.getElementById('authMsg');
-  try{
-    const raw = localStorage.getItem(AUTH_KEY);
-    if(raw){
-      const data = JSON.parse(raw);
-      if(data && data.expireAt && Date.now() < data.expireAt){
-        if(gate) gate.style.display = 'none';
-        return;
-      }else{
-        localStorage.removeItem(AUTH_KEY);
-        if(msg) msg.textContent = '授权已到期，请重新输入授权码';
-      }
-    }
-  }catch(e){}document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("authBtn");
-  const input = document.getElementById("authCode");
 
-  if (btn) {
-    btn.onclick = function () {
-      verifyAccess();
-    };
-  }
-
-  if (input) {
-    input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        verifyAccess();
-      }
-    });
-  }
-
-  initAccess();
 });
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 
