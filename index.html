@@ -168,10 +168,6 @@ function loadInputs(){const raw=localStorage.getItem('braid_calc_v21');if(!raw){
 const AUTH_CODES = {
   "WM-NEIBU-001": {name:"内部", days:365},
   "WM-VIP-001": {name:"VIP", days:365},
-  "HH-BEIXIN-001": {name:"深圳北芯", days:365},
-  "HH-DUSHI-001": {name:"杜氏医疗", days:365},
-  "HH-LANFAN-001": {name:"蓝帆", days:365},
-  "HH-TEST-001": {name:"测试码", days:365}
 };
 const AUTH_KEY = "braid_tool_auth_v24";
 
@@ -221,12 +217,31 @@ function initAccess(){
         if(msg) msg.textContent = '授权已到期，请重新输入授权码';
       }
     }
-  }catch(e){}
+  }catch(e){}document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("authBtn");
+  const input = document.getElementById("authCode");
+
+  if (btn) {
+    btn.onclick = function () {
+      verifyAccess();
+    };
+  }
+
+  if (input) {
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        verifyAccess();
+      }
+    });
+  }
+
+  initAccess();
+});
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 
 // Override copyText with watermark
 async function copyText(t){
-  const watermark = "\\n\\n—— 数据由恒辉王萌编织工艺工具生成";
+  const watermark = "\\n\\n—— 数据由王萌编织工艺工具生成";
   const finalText = (t || '') + watermark;
   try{
     await navigator.clipboard.writeText(finalText);
@@ -243,6 +258,6 @@ async function copyText(t){
 initAccess();
 calc(); reverseCalc();
 </script>
-<div class="footer-note">© 恒辉王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
+<div class="footer-note">© 王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
 </body>
 </html>
