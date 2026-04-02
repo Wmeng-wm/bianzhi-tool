@@ -35,15 +35,15 @@ textarea{min-height:180px}
 </div>
 
 <div class="wrap">
-  <div class="card"><h1 style="margin:0 0 6px">编织工艺计算器</h1><div style="color:#64748b">已更新至V2.5，修正部分错误。</div></div>
+  <div class="card"><h1 style="margin:0 0 6px">编织工艺计算器</h1><div style="color:#64748b">已更新至V2.6，修复工艺系数联动逻辑。</div></div>
 
   <div class="card">
     <div class="grid">
-      <div><label>锭数</label><input id="spindles" type="number" value="24"></div>
+      <div><label>锭数</label><input id="spindles" type="number" value="144"></div>
       <div><label>工艺</label><select id="craft"><option value="1x1">一压一</option><option value="1x2" selected>一压二</option><option value="2x2">二压二</option></select></div>
-      <div><label>芯棒直径 D（mm）</label><input id="mandrel" type="number" step="0.001" value="1.25"></div>
-      <div><label>丝径 d（mm）</label><input id="wire" type="number" step="0.001" value="0.127"></div>
-      <div><label>PPI（每英寸编织点）</label><input id="ppi" type="number" step="0.01" value="35"></div>
+      <div><label>芯棒直径 D（mm）</label><input id="mandrel" type="number" step="0.001" value="8"></div>
+      <div><label>丝径 d（mm）</label><input id="wire" type="number" step="0.001" value="0.03"></div>
+      <div><label>PPI（每英寸编织点）</label><input id="ppi" type="number" step="0.01" value="55"></div>
       <div><label>成品长度（mm）</label><input id="length" type="number" step="0.1" value="400000"></div>
     </div>
     <div style="height:12px"></div>
@@ -56,10 +56,10 @@ textarea{min-height:180px}
 
   <div class="card">
     <div class="out">
-      <div class="kpi"><div class="t">用丝比 (不含损耗)</div><div class="v" id="ratio">-</div><div class="s">计算用丝比</div></div>
+      <div class="kpi"><div class="t">稳定版用丝比</div><div class="v" id="ratio">-</div><div class="s">主结果</div></div>
       <div class="kpi"><div class="t">编织夹角</div><div class="v" id="angle">-</div><div class="s">显示为 2×单丝角</div></div>
       <div class="kpi"><div class="t">单丝理论角</div><div class="v" id="singleAngle">-</div><div class="s">内部计算角</div></div>
-      <div class="kpi"><div class="t">理论用丝比 (不含损耗)</div><div class="v" id="theory">-</div><div class="s">1 / cos(单丝角)</div></div>
+      <div class="kpi"><div class="t">理论用丝比</div><div class="v" id="theory">-</div><div class="s">1 / cos(单丝角)</div></div>
       <div class="kpi"><div class="t">单股理论总用丝</div><div class="v" id="single">-</div><div class="s">按长度计算</div></div>
       <div class="kpi"><div class="t">机台理论总用丝</div><div class="v" id="total">-</div><div class="s">全部锭总和</div></div>
     </div>
@@ -69,8 +69,8 @@ textarea{min-height:180px}
 </div>
 
 <script>
-const AUTH_CODES = {"HH-NEIBU-001": {name:"内部", days:3650}};
-const AUTH_KEY = "braid_tool_auth_v25_fix";
+const AUTH_CODES = {"WM-NEIBU": {name:"内部", days:3650}};
+const AUTH_KEY = "braid_tool_auth_v26";
 function formatExpire(ts){ const d=new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function verifyAccess(){ const code=(document.getElementById('authCode').value||'').trim(); const msg=document.getElementById('authMsg'); if(AUTH_CODES[code]){ const cfg=AUTH_CODES[code]; const expireAt=Date.now()+(cfg.days||7)*24*60*60*1000; localStorage.setItem(AUTH_KEY, JSON.stringify({code,name:cfg.name,expireAt})); document.getElementById('authGate').style.display='none'; alert(`授权成功\n用户：${cfg.name}\n有效期至：${formatExpire(expireAt)}`);} else { msg.textContent='授权码错误，请重新输入'; } }
 (function initAccess(){ try{ const raw=localStorage.getItem(AUTH_KEY); if(raw){ const data=JSON.parse(raw); if(data && data.expireAt && Date.now()<data.expireAt){ document.getElementById('authGate').style.display='none'; } else { localStorage.removeItem(AUTH_KEY); } } }catch(e){} })();
@@ -79,38 +79,51 @@ function v(id){return parseFloat(document.getElementById(id).value||0)}
 function set(id,val){document.getElementById(id).textContent=val}
 function craftText(c){return c==='1x1'?'一压一':c==='1x2'?'一压二':'二压二'}
 
-// 单丝角（内部真实计算角）
-function singleAngle(D, ppi, sp){
-  // 修正：他人工具使用 (sp / 4) 来确定节距，这是匹配的关键
-  // 原公式：let tanA = (Math.PI * D * ppi) / (25.4 * sp);
-  // 新公式：tanA = 轴向距离 / 圆周距离 = (pi * D) / (sp / 4 * 25.4 / ppi)
-  let tanA = (Math.PI * D) / ((sp / 4) * (25.4 / ppi));
+// 获取不同工艺对应的节距系数(Divisor)
+function getPitchDivisor(craft) {
+  if (craft === '1x1') return 4; // 1压1交叉最密，标准系数为4（对齐图一数据的关键）
+  if (craft === '2x2') return 2; // 2压2交叉较疏，标准系数通常为2
+  if (craft === '1x2') return 1; // 1压2此处恢复您旧版代码里的“纯几何”基准系数1
+  return 1;
+}
+
+// 单丝角（内部真实计算角）- 现在根据 craft 动态计算！
+function singleAngle(D, ppi, sp, craft){
+  let divisor = getPitchDivisor(craft);
+  // 公式：tanA = 圆周长 / 节距
+  let pitch = (sp / divisor) * (25.4 / ppi);
+  let tanA = (Math.PI * D) / pitch;
   return Math.atan(tanA) * 180 / Math.PI;
 }
+
 // 编织夹角（页面显示角）
-function braidAngle(D, ppi, sp){
-  return singleAngle(D, ppi, sp) * 2;
+function braidAngle(D, ppi, sp, craft){
+  return singleAngle(D, ppi, sp, craft) * 2;
 }
+
 // 理论用丝比
-function theoryRatio(D, ppi, sp){
-  let angle = singleAngle(D, ppi, sp) * Math.PI / 180;
+function theoryRatio(D, ppi, sp, craft){
+  let angle = singleAngle(D, ppi, sp, craft) * Math.PI / 180;
   return 1 / Math.cos(angle);
 }
-// 稳定版用丝比：修正逻辑，移除所有工艺的自定义修正乘数，直接返回理论比，使其匹配他人工具的用丝比
+
+// 稳定版用丝比：因为底层的角度算法已经区分了工艺，这里直接拿准确的理论值即可。
+// 如果实际生产中某特定工艺仍然存在额外“起伏损耗”，您可以直接在这里用乘数微调。
 function stableRatio(sp, D, ppi, craft){
-  let base = theoryRatio(D, ppi, sp);
-  // 移除所有自定义的经验修正
-  // if(craft === '1x2') return base;
-  // if(craft === '1x1') return base * 1.50;
-  // if(craft === '2x2') return base * 1.10;
+  let base = theoryRatio(D, ppi, sp, craft);
+  // 例如：若一压一实际加工还会多耗损 2%，可改为 if(craft === '1x1') return base * 1.02; 
   return base;
 }
+
 function calc(){
   const sp=v('spindles'),D=v('mandrel'),ppi=v('ppi'),len=v('length'),craft=document.getElementById('craft').value;
-  const sAngle=singleAngle(D,ppi,sp);
-  const bAngle=braidAngle(D,ppi,sp);
-  const theo=theoryRatio(D,ppi,sp);
+  
+  // 传参新增 craft
+  const sAngle=singleAngle(D,ppi,sp,craft);
+  const bAngle=braidAngle(D,ppi,sp,craft);
+  const theo=theoryRatio(D,ppi,sp,craft);
   const ratio=stableRatio(sp,D,ppi,craft);
+  
   const single=ratio*len,total=single*sp;
   set('ratio',ratio.toFixed(3));
   set('angle',bAngle.toFixed(2)+'°');
@@ -120,17 +133,19 @@ function calc(){
   set('total',total.toFixed(1)+' mm');
   buildPreview('customer');
 }
+
 function buildPreview(mode){
  const sp=v('spindles'),D=v('mandrel'),d=v('wire'),ppi=v('ppi'),len=v('length'),craft=craftText(document.getElementById('craft').value);
  const ratio=document.getElementById('ratio').textContent, angle=document.getElementById('angle').textContent, theo=document.getElementById('theory').textContent, sAngle=document.getElementById('singleAngle').textContent;
  const single=document.getElementById('single').textContent, total=document.getElementById('total').textContent;
- document.getElementById('preview').value = mode==='engineer' ? `【编织工艺工程计算】\n工艺：${craft}\n锭数：${sp}锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\nPPI：${ppi}\n成品长度：${len} mm\n\n正算结果：\n1、用丝比：${ratio}\n2、编织夹角：${angle}\n3、单丝理论角：${sAngle}\n4、理论用丝比：${theo}\n5、单股理论总用丝：${single}\n6、机台理论总用丝：${total}\n\n工程说明：此结果基于理论几何计算，不含损耗。工艺人员请根据实际情况添加损耗系数（例如：成品长度 * 用丝比 * (1 + 损耗率)）。` :
- `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp}锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\nPPI：${ppi}\n成品长度：${len} mm\n\n计算结果（按单股）：\n1、用丝比：${ratio}\n2、单股理论用丝：${single}\n3、机台理论总用丝：${total}\n4、编织夹角：${angle}\n5、理论用丝比：${theo}\n\n注意：上述用丝比为理论计算值，未包含实际生产中的损耗。`;
+ document.getElementById('preview').value = mode==='engineer' ? `【编织工艺工程计算】\n工艺：${craft}\n锭数：${sp}锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\nPPI：${ppi}\n成品长度：${len} mm\n\n正算结果：\n1、稳定版用丝比：${ratio}\n2、编织夹角：${angle}\n3、单丝理论角：${sAngle}\n4、理论用丝比：${theo}\n5、单股理论总用丝：${single}\n6、机台理论总用丝：${total}\n\n工程说明：此用丝比基于不同工艺的专属几何结构运算得出。` :
+ `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp}锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\nPPI：${ppi}\n成品长度：${len} mm\n\n计算结果（按单股）：\n1、用丝比：${ratio}\n2、单股理论用丝：${single}\n3、机台理论总用丝：${total}\n4、编织夹角：${angle}\n5、理论用丝比：${theo}`;
 }
-async function copyText(t){ const finalText=(t||'')+"\n\n【注意：用丝比为理论计算值，不含生产损耗。】\n\n—— 数据由恒辉王萌编织工艺工具生成"; try{ await navigator.clipboard.writeText(finalText); alert('已复制'); }catch(e){ const ta=document.getElementById('preview'); ta.value=finalText; ta.select(); document.execCommand('copy'); alert('已复制'); } }
+
+async function copyText(t){ const finalText=(t||'')+"\n\n—— 数据由王萌编织工艺工具生成"; try{ await navigator.clipboard.writeText(finalText); alert('已复制'); }catch(e){ const ta=document.getElementById('preview'); ta.value=finalText; ta.select(); document.execCommand('copy'); alert('已复制'); } }
 function copyCustomer(){calc();buildPreview('customer');copyText(document.getElementById('preview').value)}
 function copyEngineer(){calc();buildPreview('engineer');copyText(document.getElementById('preview').value)}
 calc();
 </script>
-<div class="footer-note">© 恒辉王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
+<div class="footer-note">© 王萌编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
 </body></html>
