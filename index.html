@@ -77,7 +77,7 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
     <h1 style="margin:0 0 8px; font-size:24px; letter-spacing:-0.5px;">编织工艺计算器</h1>
     <div style="color:#64748b; line-height: 1.6; font-size:13px;">
       V3.1 版本，强制全局并排布局，精简功能。<br>
-      <span style="color:#3b82f6; font-weight: 600;">由王萌开发｜仅内部授权使用</span>
+      <span style="color:#3b82f6; font-weight: 600;">WM开发｜仅内部授权使用</span>
     </div>
   </div>
 
@@ -261,7 +261,7 @@ function buildPreview(){
 4、机台理论总用丝：${total}`;
 }
 
-async function copyText(t){ const finalText=(t||'')+"\n\n—— 王萌开发｜内部授权使用"; try{ await navigator.clipboard.writeText(finalText); alert('已复制到剪贴板'); }catch(e){ const ta=document.getElementById('preview'); ta.value=finalText; ta.select(); document.execCommand('copy'); alert('已复制到剪贴板'); } }
+async function copyText(t){ const finalText=(t||'')+"\n\n—— WM开发｜内部授权使用"; try{ await navigator.clipboard.writeText(finalText); alert('已复制到剪贴板'); }catch(e){ const ta=document.getElementById('preview'); ta.value=finalText; ta.select(); document.execCommand('copy'); alert('已复制到剪贴板'); } }
 function copyCustomer(){calc();buildPreview();copyText(document.getElementById('preview').value)}
 
 sync('ppi');
