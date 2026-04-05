@@ -145,7 +145,11 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
 </div>
 
 <script>
-const AUTH_CODES = {"WM-NEIBU": {name:"内部", days:3650}};
+const AUTH_CODES = {
+  "WM-NEIBU": {name:"内部", days:3650},
+  "VIP-001": {name:"VIP客户1", days:365},
+  "VIP-002": {name:"VIP客户2", days:365}
+};
 const AUTH_KEY = "braid_tool_auth_v31";
 function formatExpire(ts){ const d=new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function verifyAccess(){ const code=(document.getElementById('authCode').value||'').trim(); const msg=document.getElementById('authMsg'); if(AUTH_CODES[code]){ const cfg=AUTH_CODES[code]; const expireAt=Date.now()+(cfg.days||7)*24*60*60*1000; localStorage.setItem(AUTH_KEY, JSON.stringify({code,name:cfg.name,expireAt})); document.getElementById('authGate').style.display='none'; alert(`授权成功\n欢迎使用，${cfg.name}用户！\n有效期至：${formatExpire(expireAt)}`);} else { msg.textContent='授权码错误，请重新输入或联系开发者'; } }
