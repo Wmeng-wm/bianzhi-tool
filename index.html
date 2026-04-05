@@ -54,30 +54,16 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 .kpi-primary .s {color: #059669;}
 
 textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
-.auth-wrap{position:fixed;inset:0;background:linear-gradient(180deg,#f6f8fc,#eef3f9);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;backdrop-filter:blur(8px);}
-.auth-card{max-width:460px;width:100%;background:#fff;border-radius:24px;padding:32px;box-shadow:0 20px 40px rgba(0,0,0,0.08);border:none;}
-.auth-title{font-size:26px;font-weight:800;margin-bottom:12px}.auth-sub{color:#64748b;font-size:14px;line-height:1.8;margin-bottom:20px}.auth-tip{font-size:12px;color:#94a3b8;margin-top:16px;text-align:center;}
 .footer-note{color:#94a3b8;font-size:13px;text-align:center;padding:10px 0 30px; font-weight: 500;}
 </style>
 </head>
 <body>
-<div id="authGate" class="auth-wrap">
-  <div class="auth-card">
-    <div class="auth-title">编织工艺计算器</div>
-    <div class="auth-sub">请输入内部授权码后使用。验证通过后，您的设备将自动保存凭证。</div>
-    <label style="margin-bottom:8px">授权码</label>
-    <input id="authCode" type="password" placeholder="请输入授权码" style="margin-bottom:16px">
-    <button class="btn" style="width:100%; padding:16px" onclick="verifyAccess()">验证并进入</button>
-    <div id="authMsg" class="auth-tip">仅授权用户可使用，未经允许禁止外传。</div>
-  </div>
-</div>
-
 <div class="wrap">
   <div class="card" style="padding-bottom: 20px;">
     <h1 style="margin:0 0 8px; font-size:24px; letter-spacing:-0.5px;">编织工艺计算器</h1>
     <div style="color:#64748b; line-height: 1.6; font-size:13px;">
       V3.1 版本，强制全局并排布局，精简功能。<br>
-      <span style="color:#3b82f6; font-weight: 600;">WM开发｜仅内部授权使用</span>
+      <span style="color:#3b82f6; font-weight: 600;">WM开发</span>
     </div>
   </div>
 
@@ -145,16 +131,6 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
 </div>
 
 <script>
-const AUTH_CODES = {
-  "WM-NEIBU": {name:"内部", days:3650},
-  "VIP-001": {name:"VIP客户1", days:365},
-  "VIP-002": {name:"VIP客户2", days:365}
-};
-const AUTH_KEY = "braid_tool_auth_v31";
-function formatExpire(ts){ const d=new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function verifyAccess(){ const code=(document.getElementById('authCode').value||'').trim(); const msg=document.getElementById('authMsg'); if(AUTH_CODES[code]){ const cfg=AUTH_CODES[code]; const expireAt=Date.now()+(cfg.days||7)*24*60*60*1000; localStorage.setItem(AUTH_KEY, JSON.stringify({code,name:cfg.name,expireAt})); document.getElementById('authGate').style.display='none'; alert(`授权成功\n欢迎使用，${cfg.name}用户！\n有效期至：${formatExpire(expireAt)}`);} else { msg.textContent='授权码错误，请重新输入或联系开发者'; } }
-(function initAccess(){ try{ const raw=localStorage.getItem(AUTH_KEY); if(raw){ const data=JSON.parse(raw); if(data && data.expireAt && Date.now()<data.expireAt){ document.getElementById('authGate').style.display='none'; } else { localStorage.removeItem(AUTH_KEY); } } }catch(e){} })();
-
 function v(id){return parseFloat(document.getElementById(id).value||0)}
 function set(id,val){document.getElementById(id).textContent=val}
 function craftText(c){return c==='1x1'?'一压一 (1x1)':c==='1x2'?'一压二 (1x2)':'二压二 (2x2)'}
@@ -245,27 +221,14 @@ function buildPreview(){
  const pitchOut=document.getElementById('pitchOut').textContent;
  const single=document.getElementById('single').textContent, total=document.getElementById('total').textContent;
  
- document.getElementById('preview').value = `【编织工艺参数参考】
-工艺：${craft}
-锭数：${sp} 锭
-芯棒直径：${D.toFixed(3)} mm
-丝径：${d.toFixed(3)} mm
-目数：${ppi} PPI
-节距：${pitchOut} mm
-成品长度：${len} mm
-
-计算结果：
-1、用丝比：${ratio}
-2、编织夹角：${angle}
-3、单股理论用丝：${single} mm
-4、机台理论总用丝：${total}`;
+ document.getElementById('preview').value = `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp} 锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\n目数：${ppi} PPI\n节距：${pitchOut} mm\n成品长度：${len} mm\n\n计算结果：\n1、用丝比：${ratio}\n2、编织夹角：${angle}\n3、单股理论用丝：${single} mm\n4、机台理论总用丝：${total}`;
 }
 
-async function copyText(t){ const finalText=(t||'')+"\n\n—— WM开发｜内部授权使用"; try{ await navigator.clipboard.writeText(finalText); alert('已复制到剪贴板'); }catch(e){ const ta=document.getElementById('preview'); ta.value=finalText; ta.select(); document.execCommand('copy'); alert('已复制到剪贴板'); } }
+async function copyText(t){ const finalText=(t||'')+"\n\n—— WM开发"; try{ await navigator.clipboard.writeText(finalText); alert('已复制到剪贴板'); }catch(e){ console.error(e); alert('复制失败'); } }
 function copyCustomer(){calc();buildPreview();copyText(document.getElementById('preview').value)}
 
 sync('ppi');
 calc();
 </script>
-<div class="footer-note">版权所有 © 王萌｜编织工艺工具｜仅授权用户内部使用，未经允许禁止外传。</div>
+<div class="footer-note">版权所有 © 王萌｜编织工艺工具</div>
 </body></html>
