@@ -56,7 +56,7 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
   <div class="card" style="padding-bottom: 20px;">
     <h1 style="margin:0 0 8px; font-size:24px; letter-spacing:-0.5px;">编织工艺计算器</h1>
     <div style="color:#64748b; line-height: 1.6; font-size:13px;">
-      V3.4 版本，彻底修复联动输入框大数字显示截断问题。
+      V3.5 版本，修复角度周期性导致的计算错误。
     </div>
   </div>
 
@@ -67,7 +67,6 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
       <div><label>芯棒直径 D (mm)</label><input id="mandrel" type="number" step="0.001" value="8" oninput="sync('ppi')"></div>
       <div><label>丝径 d (mm)</label><input id="wire" type="number" step="0.001" value="0.03"></div>
       
-      <!-- 核心修复：三个联动框改为 type="text"，避免浏览器自动截断大数字 -->
       <div><label>目数 PPI (联动输入)</label><input id="ppi" type="text" inputmode="decimal" value="55" oninput="sync('ppi')"></div>
       <div><label>节距 Pitch (mm) (联动输入)</label><input id="pitchIn" type="text" inputmode="decimal" value="" oninput="sync('pitch')"></div>
       <div><label>编织夹角 (°) (联动输入)</label><input id="angleIn" type="text" inputmode="decimal" value="" oninput="sync('angle')"></div>
@@ -136,6 +135,13 @@ function getPitchDivisor(craft) {
   return 1;
 }
 
+/* 角度归一化函数：将任意角度映射到 0°~180° 区间，确保 tan() 输入在 0°~90° */
+function normalizeAngle(angle) {
+  angle = angle % 180;  // 取 180° 周期
+  if (angle < 0) angle += 180;  // 处理负角度
+  return angle;
+}
+
 function sync(source) {
   const sp = v('spindles') || 144;
   const D = v('mandrel') || 8;
@@ -163,12 +169,13 @@ function sync(source) {
   } else if (source === 'angle') {
      const ang = v('angleIn');
      if(ang > 0) {
-       let tanA = Math.tan((ang / 2) * Math.PI / 180);
+       // 核心修复：对角度做周期性归一化，避免 tan() 进入负值区间
+       const normalizedAng = normalizeAngle(ang);
+       let tanA = Math.tan((normalizedAng / 2) * Math.PI / 180);
        if(tanA > 0) {
            const pitch = (Math.PI * D) / tanA;
            document.getElementById('pitchIn').value = pitch.toFixed(2);
            const ppi = (sp / divisor) * (25.4 / pitch);
-           /* 写回 text 输入框，浏览器不会截断 */
            document.getElementById('ppi').value = ppi.toFixed(2);
        }
      }
