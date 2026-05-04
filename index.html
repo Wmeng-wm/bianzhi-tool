@@ -56,7 +56,7 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
   <div class="card" style="padding-bottom: 20px;">
     <h1 style="margin:0 0 8px; font-size:24px; letter-spacing:-0.5px;">编织工艺计算器</h1>
     <div style="color:#64748b; line-height: 1.6; font-size:13px;">
-      V3.6 版本，修复角度计算逻辑，保留原始角度显示。
+      V3.1 版本，优化各项功能。
     </div>
   </div>
 
@@ -67,9 +67,9 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
       <div><label>芯棒直径 D (mm)</label><input id="mandrel" type="number" step="0.001" value="8" oninput="sync('ppi')"></div>
       <div><label>丝径 d (mm)</label><input id="wire" type="number" step="0.001" value="0.03"></div>
       
-      <div><label>目数 PPI (联动输入)</label><input id="ppi" type="text" inputmode="decimal" value="55" oninput="sync('ppi')"></div>
-      <div><label>节距 Pitch (mm) (联动输入)</label><input id="pitchIn" type="text" inputmode="decimal" value="" oninput="sync('pitch')"></div>
-      <div><label>编织夹角 (°) (联动输入)</label><input id="angleIn" type="text" inputmode="decimal" value="" oninput="sync('angle')"></div>
+      <div><label>目数 PPI (联动输入)</label><input id="ppi" type="number" step="0.01" value="55" oninput="sync('ppi')"></div>
+      <div><label>节距 Pitch (mm) (联动输入)</label><input id="pitchIn" type="number" step="0.01" value="" oninput="sync('pitch')"></div>
+      <div><label>编织夹角 (°) (联动输入)</label><input id="angleIn" type="number" step="0.01" value="" oninput="sync('angle')"></div>
       <div><label>成品长度 (mm)</label><input id="length" type="number" step="0.1" value="400000"></div>
     </div>
     
@@ -109,7 +109,7 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
       <div class="kpi">
         <div class="t">单股理论总用丝</div>
         <div class="v" id="single">-</div>
-        <div class="s">单位: mm</div>
+        <div class="s">单位: m (米)</div>
       </div>
       
       <div class="kpi">
@@ -161,9 +161,8 @@ function sync(source) {
      }
   } else if (source === 'angle') {
      const ang = v('angleIn');
-     if(ang > 0) {
-       // 核心修复：对 tan() 结果取绝对值，确保计算使用正数，但保留原始角度
-       let tanA = Math.abs(Math.tan((ang / 2) * Math.PI / 180));
+     if(ang > 0 && ang < 180) {
+       let tanA = Math.tan((ang / 2) * Math.PI / 180);
        if(tanA > 0) {
            const pitch = (Math.PI * D) / tanA;
            document.getElementById('pitchIn').value = pitch.toFixed(2);
@@ -188,12 +187,6 @@ function stableRatio(sp, D, ppi, craft){ return theoryRatio(D, ppi, sp, craft); 
 function calc(){
   const sp=v('spindles'),D=v('mandrel'),ppi=v('ppi'),len=v('length'),craft=document.getElementById('craft').value;
   
-  if(!ppi || ppi <= 0){
-    set('ratio','-'); set('angle','-'); set('pitchOut','-');
-    set('theory','-'); set('single','-'); set('total','-');
-    return;
-  }
-  
   const sAngle=singleAngle(D,ppi,sp,craft);
   const bAngle=braidAngle(D,ppi,sp,craft);
   const theo=theoryRatio(D,ppi,sp,craft);
@@ -202,15 +195,16 @@ function calc(){
   const divisor = getPitchDivisor(craft);
   const pitch = (sp / divisor) * (25.4 / ppi);
   
-  const single = ratio * len; 
-  const totalMm = single * sp; 
+  const singleMm = ratio * len;
+  const singleM = singleMm / 1000;
+  const totalMm = singleMm * sp; 
   const totalM = totalMm / 1000; 
   
   set('ratio',ratio.toFixed(3));
   set('angle',bAngle.toFixed(2)+'°');
   set('pitchOut',pitch.toFixed(2));
   set('theory',theo.toFixed(3));
-  set('single',single.toFixed(1));
+  set('single',singleM.toFixed(2)+' m');
   set('total',totalM.toFixed(2)+' m'); 
   buildPreview();
 }
@@ -221,7 +215,7 @@ function buildPreview(){
  const pitchOut=document.getElementById('pitchOut').textContent;
  const single=document.getElementById('single').textContent, total=document.getElementById('total').textContent;
  
- document.getElementById('preview').value = `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp} 锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\n目数：${ppi} PPI\n节距：${pitchOut} mm\n成品长度：${len} mm\n\n计算结果：\n1、用丝比：${ratio}\n2、编织夹角：${angle}\n3、单股理论用丝：${single} mm\n4、机台理论总用丝：${total}`;
+ document.getElementById('preview').value = `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp} 锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\n目数：${ppi} PPI\n节距：${pitchOut} mm\n成品长度：${len} mm\n\n计算结果：\n1、用丝比：${ratio}\n2、编织夹角：${angle}\n3、单股理论用丝：${single}\n4、机台理论总用丝：${total}`;
 }
 
 async function copyText(t){ const finalText=(t||'')+"\n\n—— 版权所有 © 王萌"; try{ await navigator.clipboard.writeText(finalText); alert('已复制到剪贴板'); }catch(e){ console.error(e); alert('复制失败'); } }
@@ -231,5 +225,4 @@ sync('ppi');
 calc();
 </script>
 <div class="footer-note">版权所有 © 王萌｜未经授权禁止商用或二次转发</div>
-</body>
-</html>
+</body></html>
