@@ -29,11 +29,10 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 
 #ppi{background:#fffbeb}#ppi:focus{border-color:#fbd38d;box-shadow:0 0 0 4px rgba(251,211,141,.15)}
 #pitchIn{background:#f0fdf4}#pitchIn:focus{border-color:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,.15)}
-#angleIn{background:#f0f9ff}#angleIn:focus{border-color:#38bdf8;box-shadow:0 0 0 4px rgba(56,189,248,.12)}
+#angleIn{background:#f0f9ff}#pitchIn:focus{border-color:#38bdf8;box-shadow:0 0 0 4px rgba(56,189,248,.12)}
 
 #targetW{background:#fef3c7}#targetW:focus{border-color:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.12)}
 #fiberD{background:#ede9fe}#fiberD:focus{border-color:#8b5cf6;box-shadow:0 0 0 4px rgba(139,92,246,.12)}
-#sPitch{background:#fff7ed}#sPitch:focus{border-color:#fb923c;box-shadow:0 0 0 4px rgba(251,146,60,.12)}
 
 .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
 .btn,.btn2,.btn-sec{border:none;border-radius:14px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s ease;}
@@ -106,13 +105,12 @@ textarea{min-height:200px;line-height:1.6;font-size:15px}
 
   <!-- 单锭机纤维适配（扁带两层） -->
   <div class="card">
-    <div class="section-tag tag-blue">单锭机纤维适配（扁带两层）</div>
-    <div class="hint">扁带两层结构：有效参与宽度的锭数 ≈ 总锭数 ÷ 2。宽度、节距、纤维D 三者三方联动：改任意一个，其余两个自动推算。</div>
+    <div class="section-tag tag-blue">单锭机纤维适配</div>
+    <div class="hint">宽度、纤维D 联动：改任意一个，另一个自动推算。</div>
     <div class="grid">
       <div><label>总锭数</label><input id="sSpindles" type="number" value="17" oninput="onSingleParamChange()"></div>
       <div><label>工艺结构</label><select id="sCraft" onchange="onSingleParamChange()"><option value="1x1">一压一 (1x1)</option><option value="1x2" selected>一压二 (1x2)</option><option value="2x2">二压二 (2x2)</option></select></div>
       <div><label>目标宽度 mm (联动输入)</label><input id="targetW" type="number" step="0.01" value="15" oninput="syncSingle('width')"></div>
-      <div><label>节距 mm (联动输入)</label><input id="sPitch" type="number" step="0.01" value="" oninput="syncSingle('pitch')"></div>
       <div><label>纤维旦尼尔 D (联动输入)</label><input id="fiberD" type="number" step="0.01" value="" oninput="syncSingle('denier')"></div>
       <div><label>纤维材料</label><select id="sMaterial" onchange="onSingleParamChange()">
         <option value="0.01189">聚乙烯 PE (ρ≈1.00)</option>
@@ -133,12 +131,10 @@ textarea{min-height:200px;line-height:1.6;font-size:15px}
   <!-- 单锭机结果 -->
   <div class="card">
     <div class="out">
-      <div class="kpi kpi-sec"><div class="t">推荐纤维旦尼尔</div><div class="v" id="sDenierOut">-</div><div class="s">由目标宽度或节距反推</div></div>
-      <div class="kpi"><div class="t">预估编织宽度</div><div class="v" id="sWidthOut">-</div><div class="s">由纤维 D 或节距正推</div></div>
-      <div class="kpi"><div class="t">对应节距</div><div class="v" id="sPitchOut">-</div><div class="s">Pitch (mm)</div></div>
+      <div class="kpi kpi-sec"><div class="t">推荐纤维旦尼尔</div><div class="v" id="sDenierOut">-</div><div class="s">由目标宽度或纤维D反推</div></div>
+      <div class="kpi"><div class="t">预估编织宽度</div><div class="v" id="sWidthOut">-</div><div class="s">由纤维 D 或宽度正推</div></div>
       <div class="kpi"><div class="t">对应纤维直径</div><div class="v" id="sDiaOut">-</div><div class="s">单位: mm</div></div>
       <div class="kpi"><div class="t">每锭占宽</div><div class="v" id="sPerSpOut">-</div><div class="s">含排列系数</div></div>
-      <div class="kpi"><div class="t">有效参与锭数</div><div class="v" id="sEffectiveOut">-</div><div class="s">总锭数 ÷ 2</div></div>
     </div>
   </div>
 
@@ -305,40 +301,27 @@ function syncSingle(source){
 
 function doSyncSingle(source){
   var N=v('sSpindles')||17;
-  if(N<=0)return;
   var craft=document.getElementById('sCraft').value;
-  var m=getStructFactor(craft);
-  var k=parseFloat(document.getElementById('sMaterial').value)||0.01189;
-  var f=Math.min(1,Math.max(0.8,v('sDensity')||0.9));
-  var baseDenom=m*k*f;
-  if(baseDenom<=0)return;
-
+  var m=getStructFactor(craft);  // 工艺结构系数 (1x1:2, 1x2:3, 2x2:4)
+  var k=parseFloat(document.getElementById('sMaterial').value)||0.01189;  // 材料系数
+  var f=Math.min(1,Math.max(0.8,v('sDensity')||0.9));  // 排列系数
+  var baseDenom=m*k*f;  // 基础分母
+  
   var W=v('targetW');
-  var P=v('sPitch');
   var D=v('fiberD');
 
   if(source==='width'){
     if(W>0){
-      var pitch=W/(N/2);
-      var sqrtD=W/(N/2*baseDenom);
+      // 计算纤维旦尼尔
+      var sqrtD=W/(Math.round(N/2)*baseDenom);
       var denier=sqrtD*sqrtD;
-      document.getElementById('sPitch').value=pitch.toFixed(2);
-      document.getElementById('fiberD').value=denier.toFixed(1);
-    }
-  }else if(source==='pitch'){
-    if(P>0){
-      var width=(N/2)*P;
-      var sqrtD=P/baseDenom;
-      var denier=sqrtD*sqrtD;
-      document.getElementById('targetW').value=width.toFixed(2);
       document.getElementById('fiberD').value=denier.toFixed(1);
     }
   }else if(source==='denier'){
     if(D>0){
+      // 从纤维旦尼尔计算目标宽度
       var sqrtD=Math.sqrt(D);
-      var pitch=baseDenom*sqrtD;
-      var width=(N/2)*pitch;
-      document.getElementById('sPitch').value=pitch.toFixed(2);
+      var width=Math.round(N/2)*baseDenom*sqrtD;
       document.getElementById('targetW').value=width.toFixed(2);
     }
   }
@@ -348,48 +331,31 @@ function doSyncSingle(source){
 function calcSingle(){
   var N=v('sSpindles')||17;
   var craft=document.getElementById('sCraft').value;
-  var m=getStructFactor(craft);
-  var k=parseFloat(document.getElementById('sMaterial').value)||0.01189;
-  var f=Math.min(1,Math.max(0.8,v('sDensity')||0.9));
+  var m=getStructFactor(craft);  // 工艺结构系数
+  var k=parseFloat(document.getElementById('sMaterial').value)||0.01189;  // 材料系数
+  var f=Math.min(1,Math.max(0.8,v('sDensity')||0.9));  // 排列系数
   var baseDenom=m*k*f;
   var W=v('targetW');
-  var P=v('sPitch');
   var D=v('fiberD');
-  var effectiveN=Math.round(N/2);
-
-  set('sEffectiveOut',effectiveN+' 根');
 
   if(W>0&&baseDenom>0){
-    var pitch=W/(N/2);
-    var sqrtD=W/(N/2*baseDenom);
+    // 以宽度为准
+    var sqrtD=W/(Math.round(N/2)*baseDenom);
     var denier=sqrtD*sqrtD;
     var dia=k*sqrtD;
     var perSp=m*dia*f;
     set('sDenierOut',denier.toFixed(1)+' D');
     set('sWidthOut',W.toFixed(2)+' mm');
-    set('sPitchOut',pitch.toFixed(2)+' mm');
-    set('sDiaOut',dia.toFixed(4)+' mm');
-    set('sPerSpOut',perSp.toFixed(3)+' mm');
-  }else if(P>0&&baseDenom>0){
-    var width=(N/2)*P;
-    var sqrtD=P/baseDenom;
-    var denier=sqrtD*sqrtD;
-    var dia=k*sqrtD;
-    var perSp=m*dia*f;
-    set('sDenierOut',denier.toFixed(1)+' D');
-    set('sWidthOut',width.toFixed(2)+' mm');
-    set('sPitchOut',P.toFixed(2)+' mm');
     set('sDiaOut',dia.toFixed(4)+' mm');
     set('sPerSpOut',perSp.toFixed(3)+' mm');
   }else if(D>0&&baseDenom>0){
+    // 以纤维旦尼尔为准
     var sqrtD=Math.sqrt(D);
-    var pitch=baseDenom*sqrtD;
-    var width=(N/2)*pitch;
+    var width=Math.round(N/2)*baseDenom*sqrtD;
     var dia=k*sqrtD;
     var perSp=m*dia*f;
     set('sDenierOut',D.toFixed(1)+' D');
     set('sWidthOut',width.toFixed(2)+' mm');
-    set('sPitchOut',pitch.toFixed(2)+' mm');
     set('sDiaOut',dia.toFixed(4)+' mm');
     set('sPerSpOut',perSp.toFixed(3)+' mm');
   }
