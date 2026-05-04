@@ -144,11 +144,15 @@ function v(id){return parseFloat(document.getElementById(id).value)||0}
 function set(id,val){document.getElementById(id).textContent=val}
 
 /* ===== 常规编织计算 ===== */
-function getPitchDivisor(craft){
-  if(craft==='1x1')return 4;
-  if(craft==='2x2')return 2;
-  if(craft==='1x2')return 2;
-  return 1;
+function getStructFactor(craft){
+  // 不同的交织结构会影响纱线的挤压变形（Crimp）
+  // 但不再是直接翻 2倍、3倍、4倍，而是作为一个微调的结构张力系数
+  if(craft==='1x1')return 1.05; // 一压一交织多，较紧，略微显宽
+  if(craft==='1x2')return 1.00; // 一压二作为标准基准 1.0
+  if(craft==='2x2')return 0.95; // 二压二交织少，丝线容易并拢，略微显窄
+  return 1.00;
+}
+
 }
 
 function sync(source){
