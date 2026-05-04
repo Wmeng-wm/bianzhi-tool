@@ -12,41 +12,39 @@
   --muted:#64748b;
   --pri:#22c55e;
   --pri-hover:#16a34a;
+  --warn:#ef4444;
 }
 *{box-sizing:border-box} 
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased;}
 .wrap{max-width:980px;margin:0 auto;padding:20px 12px}
 
-/* 卡片弥散阴影高级感 */
 .card{background:var(--card);border-radius:24px;padding:24px 20px;margin-bottom:16px;box-shadow:0 8px 30px rgba(15,23,42,0.04);border:none;}
 
-/* 【核心修改】：去掉了手机端的折叠代码，强制全局一行两个 */
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .out{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 
-/* 输入框微光与拟物交互，微调了手机端并排时的内边距 */
 input,select,textarea{width:100%;padding:12px 12px;border-radius:14px;background:#f8fafc;border:2px solid transparent;color:var(--text);font-size:15px;font-weight:500;transition:all 0.25s ease;}
 input:focus,select:focus,textarea:focus{outline:none;background:#fff;border-color:var(--pri);box-shadow:0 0 0 4px rgba(34,197,94,0.12);}
 label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
 
-/* 三大联动框的色彩暗示 */
 #ppi {background: #fffbeb;} #ppi:focus {border-color: #fbd38d; box-shadow: 0 0 0 4px rgba(251,211,141,0.15);}
 #pitchIn {background: #f0fdf4;} #pitchIn:focus {border-color: #4ade80; box-shadow: 0 0 0 4px rgba(74,222,128,0.15);}
 #angleIn {background: #f0f9ff;} #angleIn:focus {border-color: #38bdf8; box-shadow: 0 0 0 4px rgba(56,189,248,0.15);}
+
+/* 输入异常时的红色边框提示 */
+input.warn-border { border-color: var(--warn) !important; box-shadow: 0 0 0 4px rgba(239,68,68,0.12) !important; }
 
 .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
 .btn,.btn2{border:none;border-radius:14px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s ease;}
 .btn{background:var(--pri);color:#fff;box-shadow:0 4px 12px rgba(34,197,94,0.25);}.btn:hover{background:var(--pri-hover);transform:translateY(-1px);box-shadow:0 6px 16px rgba(34,197,94,0.3);}
 .btn2{background:#f1f5f9;color:#334155;}.btn2:hover{background:#e2e8f0;transform:translateY(-1px);}
 
-/* 结果大屏卡片交互动效 */
 .kpi{background:#f8fafc;border-radius:18px;padding:16px;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);border:1px solid rgba(0,0,0,0.02);}
 .kpi:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(15,23,42,0.06);background:#fff;}
 .kpi .t{font-size:12px;color:var(--muted);font-weight:500;}
 .kpi .v{font-size:24px;font-weight:900;margin:6px 0;letter-spacing:-0.5px;}
 .kpi .s{font-size:11px;color:#3b82f6;}
 
-/* 核心主结果专属高亮涂装 */
 .kpi-primary {background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #bbf7d0;}
 .kpi-primary:hover {background: linear-gradient(135deg, #ecfdf3 0%, #d1fae5 100%);}
 .kpi-primary .t {color: #166534;}
@@ -55,6 +53,9 @@ label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-wei
 
 textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
 .footer-note{color:#94a3b8;font-size:13px;text-align:center;padding:10px 0 30px; font-weight: 500;}
+
+/* 角度提示文字 */
+.angle-hint{font-size:11px; color:var(--warn); margin-top:4px; min-height:16px; font-weight:500; transition: opacity 0.2s;}
 </style>
 </head>
 <body>
@@ -62,7 +63,7 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
   <div class="card" style="padding-bottom: 20px;">
     <h1 style="margin:0 0 8px; font-size:24px; letter-spacing:-0.5px;">编织工艺计算器</h1>
     <div style="color:#64748b; line-height: 1.6; font-size:13px;">
-      V3.1 版本，优化各项功能。
+      V3.3 版本，修复角度反推时浏览器数字截断显示问题。
     </div>
   </div>
 
@@ -75,7 +76,11 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
       
       <div><label>目数 PPI (联动输入)</label><input id="ppi" type="number" step="0.01" value="55" oninput="sync('ppi')"></div>
       <div><label>节距 Pitch (mm) (联动输入)</label><input id="pitchIn" type="number" step="0.01" value="" oninput="sync('pitch')"></div>
-      <div><label>编织夹角 (°) (联动输入)</label><input id="angleIn" type="number" step="0.01" value="" oninput="sync('angle')"></div>
+      <div>
+        <label>编织夹角 (°) (联动输入)</label>
+        <input id="angleIn" type="number" step="0.01" value="" oninput="sync('angle')">
+        <div class="angle-hint" id="angleHint"></div>
+      </div>
       <div><label>成品长度 (mm)</label><input id="length" type="number" step="0.1" value="400000"></div>
     </div>
     
@@ -141,6 +146,18 @@ function getPitchDivisor(craft) {
   return 1;
 }
 
+/* 清除角度输入框的异常提示样式 */
+function clearAngleWarn() {
+  document.getElementById('angleIn').classList.remove('warn-border');
+  document.getElementById('angleHint').textContent = '';
+}
+
+/* 标记角度输入异常（不使用 alert，内联提示） */
+function showAngleWarn(msg) {
+  document.getElementById('angleIn').classList.add('warn-border');
+  document.getElementById('angleHint').textContent = msg;
+}
+
 function sync(source) {
   const sp = v('spindles') || 144;
   const D = v('mandrel') || 8;
@@ -148,6 +165,7 @@ function sync(source) {
   const divisor = getPitchDivisor(craft);
   
   if (source === 'ppi') {
+     clearAngleWarn();
      const p = v('ppi');
      if(p > 0) {
        const pitch = (sp / divisor) * (25.4 / p);
@@ -157,6 +175,7 @@ function sync(source) {
        document.getElementById('angleIn').value = angle.toFixed(2);
      }
   } else if (source === 'pitch') {
+     clearAngleWarn();
      const pt = v('pitchIn');
      if(pt > 0) {
        const ppi = (sp / divisor) * (25.4 / pt);
@@ -167,14 +186,36 @@ function sync(source) {
      }
   } else if (source === 'angle') {
      const ang = v('angleIn');
-     if(ang > 0 && ang < 180) {
-       let tanA = Math.tan((ang / 2) * Math.PI / 180);
-       if(tanA > 0) {
-           const pitch = (Math.PI * D) / tanA;
-           document.getElementById('pitchIn').value = pitch.toFixed(2);
-           const ppi = (sp / divisor) * (25.4 / pitch);
-           document.getElementById('ppi').value = ppi.toFixed(2);
-       }
+     
+     /* 
+      * 核心修复：角度接近180°时，tan(90°)产生超大浮点数，
+      * 导致 PPI 算出 10^12 量级的值，浏览器 input[type=number]
+      * 会将大数截断显示（如 1.8e+12 显示为 18）。
+      * 解决方案：在写回 input 之前拦截不合理量级。
+      */
+     if(ang <= 0 || ang >= 179.99) {
+       showAngleWarn('编织夹角需在 0° ~ 179.99° 之间');
+       document.getElementById('ppi').value = '';
+       document.getElementById('pitchIn').value = '';
+       return;
+     }
+     
+     clearAngleWarn();
+     let tanA = Math.tan((ang / 2) * Math.PI / 180);
+     if(tanA > 0) {
+         const pitch = (Math.PI * D) / tanA;
+         const ppi = (sp / divisor) * (25.4 / pitch);
+         
+         /* 量级安全检查：编织PPI物理上限约几千，超过10000必为异常 */
+         if(ppi > 10000) {
+           showAngleWarn('当前角度推导的 PPI 超出合理范围，请减小角度');
+           document.getElementById('ppi').value = '';
+           document.getElementById('pitchIn').value = '';
+           return;
+         }
+         
+         document.getElementById('pitchIn').value = pitch.toFixed(2);
+         document.getElementById('ppi').value = ppi.toFixed(2);
      }
   }
 }
@@ -192,6 +233,13 @@ function stableRatio(sp, D, ppi, craft){ return theoryRatio(D, ppi, sp, craft); 
 
 function calc(){
   const sp=v('spindles'),D=v('mandrel'),ppi=v('ppi'),len=v('length'),craft=document.getElementById('craft').value;
+  
+  /* 安全校验：PPI 异常时优雅降级 */
+  if(!ppi || ppi <= 0 || ppi > 10000){
+    set('ratio','-'); set('angle','-'); set('pitchOut','-');
+    set('theory','-'); set('single','-'); set('total','-');
+    return;
+  }
   
   const sAngle=singleAngle(D,ppi,sp,craft);
   const bAngle=braidAngle(D,ppi,sp,craft);
@@ -230,4 +278,4 @@ sync('ppi');
 calc();
 </script>
 <div class="footer-note">版权所有 © 王萌｜未经授权禁止商用或二次转发</div>
-</body></html>
+</html>
