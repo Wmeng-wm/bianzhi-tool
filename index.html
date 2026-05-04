@@ -109,7 +109,8 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
       <div class="kpi">
         <div class="t">单股理论总用丝</div>
         <div class="v" id="single">-</div>
-        <div class="s">单位: mm</div>
+        <!-- 调整了单股用丝的单位提示 -->
+        <div class="s" style="color:#e11d48; font-weight:600;">已换算单位: 米 (m)</div>
       </div>
       
       <div class="kpi">
@@ -120,7 +121,8 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
     </div>
   </div>
 
-  <div class="card"><textarea id="preview"></textarea></div>
+  <!-- 隐藏掉下方的文本预览区域，但保留该元素供复制功能使用 -->
+  <div class="card" style="display: none;"><textarea id="preview"></textarea></div>
 </div>
 
 <script>
@@ -162,7 +164,6 @@ function sync(source) {
   } else if (source === 'angle') {
      const ang = v('angleIn');
      if(ang > 0) {
-       // 核心修复：对 tan() 结果取绝对值，确保计算使用正数，但保留原始角度
        let tanA = Math.abs(Math.tan((ang / 2) * Math.PI / 180));
        if(tanA > 0) {
            const pitch = (Math.PI * D) / tanA;
@@ -202,15 +203,17 @@ function calc(){
   const divisor = getPitchDivisor(craft);
   const pitch = (sp / divisor) * (25.4 / ppi);
   
-  const single = ratio * len; 
-  const totalMm = single * sp; 
+  // 单股总用丝原来是mm，现换算成 m
+  const singleMm = ratio * len; 
+  const singleM = singleMm / 1000; 
+  const totalMm = singleMm * sp; 
   const totalM = totalMm / 1000; 
   
   set('ratio',ratio.toFixed(3));
   set('angle',bAngle.toFixed(2)+'°');
   set('pitchOut',pitch.toFixed(2));
   set('theory',theo.toFixed(3));
-  set('single',single.toFixed(1));
+  set('single',singleM.toFixed(2)+' m'); // 输出增加 m 单位
   set('total',totalM.toFixed(2)+' m'); 
   buildPreview();
 }
@@ -221,7 +224,8 @@ function buildPreview(){
  const pitchOut=document.getElementById('pitchOut').textContent;
  const single=document.getElementById('single').textContent, total=document.getElementById('total').textContent;
  
- document.getElementById('preview').value = `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp} 锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\n目数：${ppi} PPI\n节距：${pitchOut} mm\n成品长度：${len} mm\n\n计算结果：\n1、用丝比：${ratio}\n2、编织夹角：${angle}\n3、单股理论用丝：${single} mm\n4、机台理论总用丝：${total}`;
+ // 去掉了 ${single} 后的 mm，因为 single 变量自身现在已包含 " m"
+ document.getElementById('preview').value = `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp} 锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\n目数：${ppi} PPI\n节距：${pitchOut} mm\n成品长度：${len} mm\n\n计算结果：\n1、用丝比：${ratio}\n2、编织夹角：${angle}\n3、单股理论用丝：${single}\n4、机台理论总用丝：${total}`;
 }
 
 async function copyText(t){ const finalText=(t||'')+"\n\n—— 版权所有 © 王萌"; try{ await navigator.clipboard.writeText(finalText); alert('已复制到剪贴板'); }catch(e){ console.error(e); alert('复制失败'); } }
