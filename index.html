@@ -254,8 +254,27 @@ function buildReport(){
 
 async function copyText(t){
   var finalText=(t||'')+'\n\n—— 版权所有 © 王萌';
-  try{await navigator.clipboard.writeText(finalText);alert('已复制到剪贴板')}
-  catch(e){console.error(e);alert('复制失败')}
+  /* 优先尝试现代 Clipboard API（需 HTTPS / localhost） */
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(finalText);
+      alert('已复制到剪贴板');
+      return;
+    }
+  }catch(e){}
+  /* 回退方案：临时 textarea + execCommand，兼容 file:// 协议 */
+  try{
+    var ta=document.createElement('textarea');
+    ta.value=finalText;
+    ta.style.cssText='position:fixed;left:-9999px;top:-9999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    var ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(ok){alert('已复制到剪贴板')}
+    else{alert('复制失败，请手动复制')}
+  }catch(e){alert('复制异常：'+e.message)}
 }
 function copyCustomer(){
   calc();
