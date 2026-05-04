@@ -6,73 +6,84 @@
 <title>编织工艺计算器</title>
 <style>
 :root{
-  --bg:#f3f6fb; 
+  --bg:#f3f6fb;
   --card:#ffffff;
   --text:#0f172a;
   --muted:#64748b;
   --pri:#22c55e;
   --pri-hover:#16a34a;
+  --sec:#0ea5e9;
+  --sec-hover:#0284c7;
 }
-*{box-sizing:border-box} 
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; -webkit-font-smoothing: antialiased;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;}
 .wrap{max-width:980px;margin:0 auto;padding:20px 12px}
 
 .card{background:var(--card);border-radius:24px;padding:24px 20px;margin-bottom:16px;box-shadow:0 8px 30px rgba(15,23,42,0.04);border:none;}
-
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .out{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 
-input,select,textarea{width:100%;padding:12px 12px;border-radius:14px;background:#f8fafc;border:2px solid transparent;color:var(--text);font-size:15px;font-weight:500;transition:all 0.25s ease;}
-input:focus,select:focus,textarea:focus{outline:none;background:#fff;border-color:var(--pri);box-shadow:0 0 0 4px rgba(34,197,94,0.12);}
+input,select,textarea{width:100%;padding:12px 12px;border-radius:14px;background:#f8fafc;border:2px solid transparent;color:var(--text);font-size:15px;font-weight:500;transition:all .25s ease;}
+input:focus,select:focus,textarea:focus{outline:none;background:#fff;border-color:var(--pri);box-shadow:0 0 0 4px rgba(34,197,94,.12);}
 label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
 
-#ppi {background: #fffbeb;} #ppi:focus {border-color: #fbd38d; box-shadow: 0 0 0 4px rgba(251,211,141,0.15);}
-#pitchIn {background: #f0fdf4;} #pitchIn:focus {border-color: #4ade80; box-shadow: 0 0 0 4px rgba(74,222,128,0.15);}
-#angleIn {background: #f0f9ff;} #angleIn:focus {border-color: #38bdf8; box-shadow: 0 0 0 4px rgba(56,189,248,0.15);}
+#ppi{background:#fffbeb}#ppi:focus{border-color:#fbd38d;box-shadow:0 0 0 4px rgba(251,211,141,.15)}
+#pitchIn{background:#f0fdf4}#pitchIn:focus{border-color:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,.15)}
+#angleIn{background:#f0f9ff}#angleIn:focus{border-color:#38bdf8;box-shadow:0 0 0 4px rgba(56,189,248,.15)}
+#targetW{background:#fef3c7}#targetW:focus{border-color:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.12)}
+#fiberD{background:#ede9fe}#fiberD:focus{border-color:#8b5cf6;box-shadow:0 0 0 4px rgba(139,92,246,.12)}
 
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
-.btn,.btn2{border:none;border-radius:14px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s ease;}
-.btn{background:var(--pri);color:#fff;box-shadow:0 4px 12px rgba(34,197,94,0.25);}.btn:hover{background:var(--pri-hover);transform:translateY(-1px);box-shadow:0 6px 16px rgba(34,197,94,0.3);}
-.btn2{background:#f1f5f9;color:#334155;}.btn2:hover{background:#e2e8f0;transform:translateY(-1px);}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.btn,.btn2,.btn-sec{border:none;border-radius:14px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s ease;}
+.btn{background:var(--pri);color:#fff;box-shadow:0 4px 12px rgba(34,197,94,.25)}.btn:hover{background:var(--pri-hover);transform:translateY(-1px);box-shadow:0 6px 16px rgba(34,197,94,.3)}
+.btn2{background:#f1f5f9;color:#334155}.btn2:hover{background:#e2e8f0;transform:translateY(-1px)}
+.btn-sec{background:var(--sec);color:#fff;box-shadow:0 4px 12px rgba(14,165,233,.25)}.btn-sec:hover{background:var(--sec-hover);transform:translateY(-1px);box-shadow:0 6px 16px rgba(14,165,233,.3)}
 
-.kpi{background:#f8fafc;border-radius:18px;padding:16px;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);border:1px solid rgba(0,0,0,0.02);}
-.kpi:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(15,23,42,0.06);background:#fff;}
-.kpi .t{font-size:12px;color:var(--muted);font-weight:500;}
-.kpi .v{font-size:24px;font-weight:900;margin:6px 0;letter-spacing:-0.5px;}
-.kpi .s{font-size:11px;color:#3b82f6;}
+.kpi{background:#f8fafc;border-radius:18px;padding:16px;transition:all .3s cubic-bezier(.4,0,.2,1);border:1px solid rgba(0,0,0,.02)}
+.kpi:hover{transform:translateY(-3px);box-shadow:0 12px 24px rgba(15,23,42,.06);background:#fff}
+.kpi .t{font-size:12px;color:var(--muted);font-weight:500}
+.kpi .v{font-size:24px;font-weight:900;margin:6px 0;letter-spacing:-.5px}
+.kpi .s{font-size:11px;color:#3b82f6}
 
-.kpi-primary {background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #bbf7d0;}
-.kpi-primary:hover {background: linear-gradient(135deg, #ecfdf3 0%, #d1fae5 100%);}
-.kpi-primary .t {color: #166534;}
-.kpi-primary .v {color: #14532d;}
-.kpi-primary .s {color: #059669;}
+.kpi-primary{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #bbf7d0}
+.kpi-primary:hover{background:linear-gradient(135deg,#ecfdf3,#d1fae5)}
+.kpi-primary .t{color:#166534}.kpi-primary .v{color:#14532d}.kpi-primary .s{color:#059669}
 
-textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
-.footer-note{color:#94a3b8;font-size:13px;text-align:center;padding:10px 0 30px; font-weight: 500;}
+.kpi-sec{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd}
+.kpi-sec:hover{background:linear-gradient(135deg,#ecfeff,#cffafe)}
+.kpi-sec .t{color:#0c4a6e}.kpi-sec .v{color:#082f49}.kpi-sec .s{color:#0369a1}
+
+.section-tag{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-bottom:12px}
+.tag-green{background:#dcfce7;color:#166534}
+.tag-blue{background:#e0f2fe;color:#0c4a6e}
+.hint{color:#64748b;font-size:12px;margin:-6px 0 12px;line-height:1.5}
+
+textarea{min-height:200px;line-height:1.6;font-size:15px}
+.footer-note{color:#94a3b8;font-size:13px;text-align:center;padding:10px 0 30px;font-weight:500}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="card" style="padding-bottom: 20px;">
-    <h1 style="margin:0 0 8px; font-size:24px; letter-spacing:-0.5px;">编织工艺计算器</h1>
-    <div style="color:#64748b; line-height: 1.6; font-size:13px;">
-      V3.1 版本，优化各项功能。
-    </div>
+
+  <!-- 标题 -->
+  <div class="card" style="padding-bottom:20px">
+    <h1 style="margin:0 0 8px;font-size:24px;letter-spacing:-.5px">编织工艺计算器</h1>
+    <div style="color:#64748b;line-height:1.6;font-size:13px">V3.2 版本，新增单锭机纤维适配计算。</div>
   </div>
 
+  <!-- 常规编织计算 -->
   <div class="card">
+    <div class="section-tag tag-green">常规编织计算</div>
     <div class="grid">
-      <div><label>锭数 (Spindles)</label><input id="spindles" type="number" value="144" oninput="sync('ppi')"></div>
-      <div><label>工艺结构 (Craft)</label><select id="craft" onchange="sync('ppi')"><option value="1x1">一压一 (1x1)</option><option value="1x2" selected>一压二 (1x2)</option><option value="2x2">二压二 (2x2)</option></select></div>
+      <div><label>锭数</label><input id="spindles" type="number" value="144" oninput="sync('ppi')"></div>
+      <div><label>工艺结构</label><select id="craft" onchange="sync('ppi')"><option value="1x1">一压一 (1x1)</option><option value="1x2" selected>一压二 (1x2)</option><option value="2x2">二压二 (2x2)</option></select></div>
       <div><label>芯棒直径 D (mm)</label><input id="mandrel" type="number" step="0.001" value="8" oninput="sync('ppi')"></div>
       <div><label>丝径 d (mm)</label><input id="wire" type="number" step="0.001" value="0.03"></div>
-      
       <div><label>目数 PPI (联动输入)</label><input id="ppi" type="number" step="0.01" value="55" oninput="sync('ppi')"></div>
       <div><label>节距 Pitch (mm) (联动输入)</label><input id="pitchIn" type="number" step="0.01" value="" oninput="sync('pitch')"></div>
       <div><label>编织夹角 (°) (联动输入)</label><input id="angleIn" type="number" step="0.01" value="" oninput="sync('angle')"></div>
-      <div><label>成品长度 (mm)</label><input id="length" type="number" step="0.1" value="400000"></div>
+      <div><label>成品长度</label><input id="length" type="number" step="0.1" value="400000"></div>
     </div>
-    
     <div style="height:8px"></div>
     <div class="row">
       <button class="btn" onclick="calc()">立即计算</button>
@@ -80,149 +91,235 @@ textarea{min-height:200px; line-height: 1.6; font-size: 15px;}
     </div>
   </div>
 
+  <!-- 常规结果 -->
   <div class="card">
     <div class="out">
-      <div class="kpi kpi-primary">
-        <div class="t">稳定版用丝比</div>
-        <div class="v" id="ratio">-</div>
-        <div class="s">核心数据主结果</div>
-      </div>
-      
-      <div class="kpi">
-        <div class="t">编织夹角</div>
-        <div class="v" id="angle">-</div>
-        <div class="s">显示为 2 × 单丝角</div>
-      </div>
-      
-      <div class="kpi">
-        <div class="t">计算节距</div>
-        <div class="v" id="pitchOut">-</div>
-        <div class="s">Pitch (mm)</div>
-      </div>
-      
-      <div class="kpi">
-        <div class="t">理论用丝比</div>
-        <div class="v" id="theory">-</div>
-        <div class="s">1 / cos(单丝角)</div>
-      </div>
-      
-      <div class="kpi">
-        <div class="t">单股理论总用丝</div>
-        <div class="v" id="single">-</div>
-        <div class="s">单位: m (米)</div>
-      </div>
-      
-      <div class="kpi">
-        <div class="t">机台理论总用丝</div>
-        <div class="v" id="total">-</div>
-        <div class="s" style="color:#e11d48; font-weight:600;">已换算单位: 米 (m)</div>
-      </div>
+      <div class="kpi kpi-primary"><div class="t">稳定版用丝比</div><div class="v" id="ratio">-</div><div class="s">核心数据主结果</div></div>
+      <div class="kpi"><div class="t">编织夹角</div><div class="v" id="angle">-</div><div class="s">显示为 2 × 单丝角</div></div>
+      <div class="kpi"><div class="t">计算节距</div><div class="v" id="pitchOut">-</div><div class="s">Pitch (mm)</div></div>
+      <div class="kpi"><div class="t">理论用丝比</div><div class="v" id="theory">-</div><div class="s">1 / cos(单丝角)</div></div>
+      <div class="kpi"><div class="t">单股理论总用丝</div><div class="v" id="single">-</div><div class="s">单位: m (米)</div></div>
+      <div class="kpi"><div class="t">机台理论总用丝</div><div class="v" id="total">-</div><div class="s" style="color:#e11d48;font-weight:600">已换算单位: 米</div></div>
     </div>
   </div>
 
+  <!-- 单锭机纤维适配 -->
+  <div class="card">
+    <div class="section-tag tag-blue">单锭机纤维适配</div>
+    <div class="hint">已知锭数和目标宽度反推纤维旦尼尔，或已知 D 值正推预估宽度。两个输入框可联动互算。</div>
+    <div class="grid">
+      <div><label>锭数</label><input id="sSpindles" type="number" value="13" oninput="syncSingle('width')"></div>
+      <div><label>工艺结构</label><select id="sCraft" onchange="syncSingle('width')"><option value="1x1">一压一 (1x1)</option><option value="1x2" selected>一压二 (1x2)</option><option value="2x2">二压二 (2x2)</option></select></div>
+      <div><label>目标宽度 mm (联动输入)</label><input id="targetW" type="number" step="0.01" value="15" oninput="syncSingle('width')"></div>
+      <div><label>纤维旦尼尔 D (联动输入)</label><input id="fiberD" type="number" step="0.01" value="" oninput="syncSingle('denier')"></div>
+      <div><label>纤维材料</label><select id="sMaterial" onchange="syncSingle('width')">
+        <option value="0.01189">聚乙烯 PE (ρ≈1.00)</option>
+        <option value="0.01247">聚丙烯 PP (ρ≈0.91)</option>
+        <option value="0.01012">涤纶 PET (ρ≈1.38)</option>
+        <option value="0.01114">尼龙 PA (ρ≈1.14)</option>
+        <option value="0.00746">玻璃纤维 (ρ≈2.54)</option>
+        <option value="0.00886">碳纤维 (ρ≈1.80)</option>
+      </select></div>
+      <div><label>排列系数 (0.80 ~ 1.00)</label><input id="sDensity" type="number" step="0.01" min="0.80" max="1.00" value="0.90" oninput="syncSingle('width')"></div>
+    </div>
+    <div style="height:8px"></div>
+    <div class="row">
+      <button class="btn-sec" onclick="calcSingle()">计算适配纤维</button>
+    </div>
+  </div>
+
+  <!-- 单锭机结果 -->
+  <div class="card">
+    <div class="out">
+      <div class="kpi kpi-sec"><div class="t">推荐纤维旦尼尔</div><div class="v" id="sDenierOut">-</div><div class="s">由目标宽度反推</div></div>
+      <div class="kpi"><div class="t">预估编织宽度</div><div class="v" id="sWidthOut">-</div><div class="s">由纤维 D 正推</div></div>
+      <div class="kpi"><div class="t">对应纤维直径</div><div class="v" id="sDiaOut">-</div><div class="s">单位: mm</div></div>
+      <div class="kpi"><div class="t">每锭占宽</div><div class="v" id="sPerSpOut">-</div><div class="s">含排列系数</div></div>
+    </div>
+  </div>
+
+  <!-- 报告预览 -->
   <div class="card"><textarea id="preview"></textarea></div>
+
 </div>
 
 <script>
-function v(id){return parseFloat(document.getElementById(id).value||0)}
+/* ===== 通用工具 ===== */
+function v(id){return parseFloat(document.getElementById(id).value)||0}
 function set(id,val){document.getElementById(id).textContent=val}
 function craftText(c){return c==='1x1'?'一压一 (1x1)':c==='1x2'?'一压二 (1x2)':'二压二 (2x2)'}
 
-function getPitchDivisor(craft) {
-  if (craft === '1x1') return 4; 
-  if (craft === '2x2') return 2; 
-  if (craft === '1x2') return 2; 
+/* ===== 常规编织计算 ===== */
+function getPitchDivisor(craft){
+  if(craft==='1x1')return 4;
+  if(craft==='2x2')return 2;
+  if(craft==='1x2')return 2;
   return 1;
 }
 
-function sync(source) {
-  const sp = v('spindles') || 144;
-  const D = v('mandrel') || 8;
-  const craft = document.getElementById('craft').value;
-  const divisor = getPitchDivisor(craft);
-  
-  if (source === 'ppi') {
-     const p = v('ppi');
-     if(p > 0) {
-       const pitch = (sp / divisor) * (25.4 / p);
-       document.getElementById('pitchIn').value = pitch.toFixed(2);
-       let tanA = (Math.PI * D) / pitch;
-       let angle = Math.atan(tanA) * 180 / Math.PI * 2;
-       document.getElementById('angleIn').value = angle.toFixed(2);
-     }
-  } else if (source === 'pitch') {
-     const pt = v('pitchIn');
-     if(pt > 0) {
-       const ppi = (sp / divisor) * (25.4 / pt);
-       document.getElementById('ppi').value = ppi.toFixed(2);
-       let tanA = (Math.PI * D) / pt;
-       let angle = Math.atan(tanA) * 180 / Math.PI * 2;
-       document.getElementById('angleIn').value = angle.toFixed(2);
-     }
-  } else if (source === 'angle') {
-     const ang = v('angleIn');
-     if(ang > 0 && ang < 180) {
-       let tanA = Math.tan((ang / 2) * Math.PI / 180);
-       if(tanA > 0) {
-           const pitch = (Math.PI * D) / tanA;
-           document.getElementById('pitchIn').value = pitch.toFixed(2);
-           const ppi = (sp / divisor) * (25.4 / pitch);
-           document.getElementById('ppi').value = ppi.toFixed(2);
-       }
-     }
+function sync(source){
+  var sp=v('spindles')||144, D=v('mandrel')||8;
+  var craft=document.getElementById('craft').value;
+  var divisor=getPitchDivisor(craft);
+  if(source==='ppi'){
+    var p=v('ppi');
+    if(p>0){
+      var pitch=(sp/divisor)*(25.4/p);
+      document.getElementById('pitchIn').value=pitch.toFixed(2);
+      var tanA=(Math.PI*D)/pitch;
+      document.getElementById('angleIn').value=(Math.atan(tanA)*180/Math.PI*2).toFixed(2);
+    }
+  }else if(source==='pitch'){
+    var pt=v('pitchIn');
+    if(pt>0){
+      document.getElementById('ppi').value=((sp/divisor)*(25.4/pt)).toFixed(2);
+      var tanA=(Math.PI*D)/pt;
+      document.getElementById('angleIn').value=(Math.atan(tanA)*180/Math.PI*2).toFixed(2);
+    }
+  }else if(source==='angle'){
+    var ang=v('angleIn');
+    if(ang>0&&ang<180){
+      var tanA=Math.tan((ang/2)*Math.PI/180);
+      if(tanA>0){
+        var pitch=(Math.PI*D)/tanA;
+        document.getElementById('pitchIn').value=pitch.toFixed(2);
+        document.getElementById('ppi').value=((sp/divisor)*(25.4/pitch)).toFixed(2);
+      }
+    }
   }
 }
 
-function singleAngle(D, ppi, sp, craft){
-  let divisor = getPitchDivisor(craft);
-  let pitch = (sp / divisor) * (25.4 / ppi);
-  let tanA = (Math.PI * D) / pitch;
-  return Math.atan(tanA) * 180 / Math.PI;
+function singleAngle(D,ppi,sp,craft){
+  var divisor=getPitchDivisor(craft);
+  var pitch=(sp/divisor)*(25.4/ppi);
+  return Math.atan((Math.PI*D)/pitch)*180/Math.PI;
 }
-
-function braidAngle(D, ppi, sp, craft){ return singleAngle(D, ppi, sp, craft) * 2; }
-function theoryRatio(D, ppi, sp, craft){ let angle = singleAngle(D, ppi, sp, craft) * Math.PI / 180; return 1 / Math.cos(angle); }
-function stableRatio(sp, D, ppi, craft){ return theoryRatio(D, ppi, sp, craft); }
+function braidAngle(D,ppi,sp,craft){return singleAngle(D,ppi,sp,craft)*2}
+function theoryRatio(D,ppi,sp,craft){return 1/Math.cos(singleAngle(D,ppi,sp,craft)*Math.PI/180)}
+function stableRatio(sp,D,ppi,craft){return theoryRatio(D,ppi,sp,craft)}
 
 function calc(){
-  const sp=v('spindles'),D=v('mandrel'),ppi=v('ppi'),len=v('length'),craft=document.getElementById('craft').value;
-  
-  const sAngle=singleAngle(D,ppi,sp,craft);
-  const bAngle=braidAngle(D,ppi,sp,craft);
-  const theo=theoryRatio(D,ppi,sp,craft);
-  const ratio=stableRatio(sp,D,ppi,craft);
-  
-  const divisor = getPitchDivisor(craft);
-  const pitch = (sp / divisor) * (25.4 / ppi);
-  
-  const singleMm = ratio * len;
-  const singleM = singleMm / 1000;
-  const totalMm = singleMm * sp; 
-  const totalM = totalMm / 1000; 
-  
+  var sp=v('spindles'),D=v('mandrel'),ppi=v('ppi'),len=v('length');
+  var craft=document.getElementById('craft').value;
+  var bAngle=braidAngle(D,ppi,sp,craft);
+  var theo=theoryRatio(D,ppi,sp,craft);
+  var ratio=stableRatio(sp,D,ppi,craft);
+  var divisor=getPitchDivisor(craft);
+  var pitch=(sp/divisor)*(25.4/ppi);
+  var singleM=ratio*len/1000;
+  var totalM=singleM*sp;
   set('ratio',ratio.toFixed(3));
   set('angle',bAngle.toFixed(2)+'°');
   set('pitchOut',pitch.toFixed(2));
   set('theory',theo.toFixed(3));
   set('single',singleM.toFixed(2)+' m');
-  set('total',totalM.toFixed(2)+' m'); 
+  set('total',totalM.toFixed(2)+' m');
   buildPreview();
 }
 
 function buildPreview(){
- const sp=v('spindles'),D=v('mandrel'),d=v('wire'),ppi=v('ppi'),len=v('length'),craft=craftText(document.getElementById('craft').value);
- const ratio=document.getElementById('ratio').textContent, angle=document.getElementById('angle').textContent;
- const pitchOut=document.getElementById('pitchOut').textContent;
- const single=document.getElementById('single').textContent, total=document.getElementById('total').textContent;
- 
- document.getElementById('preview').value = `【编织工艺参数参考】\n工艺：${craft}\n锭数：${sp} 锭\n芯棒直径：${D.toFixed(3)} mm\n丝径：${d.toFixed(3)} mm\n目数：${ppi} PPI\n节距：${pitchOut} mm\n成品长度：${len} mm\n\n计算结果：\n1、用丝比：${ratio}\n2、编织夹角：${angle}\n3、单股理论用丝：${single}\n4、机台理论总用丝：${total}`;
+  var sp=v('spindles'),D=v('mandrel'),d=v('wire'),ppi=v('ppi'),len=v('length');
+  var craft=craftText(document.getElementById('craft').value);
+  var ratio=document.getElementById('ratio').textContent;
+  var angle=document.getElementById('angle').textContent;
+  var pitchOut=document.getElementById('pitchOut').textContent;
+  var single=document.getElementById('single').textContent;
+  var total=document.getElementById('total').textContent;
+  document.getElementById('preview').value=
+    '【编织工艺参数参考】\n'+
+    '工艺：'+craft+'\n'+
+    '锭数：'+sp+' 锭\n'+
+    '芯棒直径：'+D.toFixed(3)+' mm\n'+
+    '丝径：'+d.toFixed(3)+' mm\n'+
+    '目数：'+ppi+' PPI\n'+
+    '节距：'+pitchOut+' mm\n'+
+    '成品长度：'+len+' mm\n\n'+
+    '计算结果：\n'+
+    '1、用丝比：'+ratio+'\n'+
+    '2、编织夹角：'+angle+'\n'+
+    '3、单股理论用丝：'+single+'\n'+
+    '4、机台理论总用丝：'+total;
 }
 
-async function copyText(t){ const finalText=(t||'')+"\n\n—— 版权所有 © 王萌"; try{ await navigator.clipboard.writeText(finalText); alert('已复制到剪贴板'); }catch(e){ console.error(e); alert('复制失败'); } }
+async function copyText(t){
+  var finalText=(t||'')+'\n\n—— 版权所有 © 王萌';
+  try{await navigator.clipboard.writeText(finalText);alert('已复制到剪贴板')}
+  catch(e){console.error(e);alert('复制失败')}
+}
 function copyCustomer(){calc();buildPreview();copyText(document.getElementById('preview').value)}
 
+/* ===== 单锭机纤维适配计算 ===== */
+
+/* 工艺结构 → 宽度方向等效丝数 */
+function getStructFactor(craft){
+  if(craft==='1x1')return 2;
+  if(craft==='1x2')return 3;
+  if(craft==='2x2')return 4;
+  return 2;
+}
+
+/* 联动互算：输入宽度→算D，输入D→算宽度 */
+function syncSingle(source){
+  var N=v('sSpindles')||13;
+  var craft=document.getElementById('sCraft').value;
+  var m=getStructFactor(craft);
+  var k=parseFloat(document.getElementById('sMaterial').value)||0.01189;
+  var f=Math.min(1,Math.max(0.8,v('sDensity')||0.9));
+  var denom=N*m*k*f;
+  if(denom<=0)return;
+
+  if(source==='width'){
+    var W=v('targetW');
+    if(W>0){
+      var sqrtD=W/denom;
+      document.getElementById('fiberD').value=(sqrtD*sqrtD).toFixed(1);
+    }
+  }else if(source==='denier'){
+    var D=v('fiberD');
+    if(D>0){
+      document.getElementById('targetW').value=(denom*Math.sqrt(D)).toFixed(2);
+    }
+  }
+  calcSingle();
+}
+
+function calcSingle(){
+  var N=v('sSpindles')||13;
+  var craft=document.getElementById('sCraft').value;
+  var m=getStructFactor(craft);
+  var k=parseFloat(document.getElementById('sMaterial').value)||0.01189;
+  var f=Math.min(1,Math.max(0.8,v('sDensity')||0.9));
+  var W=v('targetW');
+  var D=v('fiberD');
+  var denom=N*m*k*f;
+
+  if(W>0&&denom>0){
+    /* 从宽度反推 D */
+    var sqrtD=W/denom;
+    var denier=sqrtD*sqrtD;
+    var dia=k*sqrtD;
+    var perSp=m*dia*f;
+    set('sDenierOut',denier.toFixed(1)+' D');
+    set('sDiaOut',dia.toFixed(4)+' mm');
+    set('sPerSpOut',perSp.toFixed(3)+' mm');
+    set('sWidthOut',W.toFixed(2)+' mm');
+  }else if(D>0&&denom>0){
+    /* 从 D 正推宽度 */
+    var wCalc=denom*Math.sqrt(D);
+    var dia=k*Math.sqrt(D);
+    var perSp=m*dia*f;
+    set('sWidthOut',wCalc.toFixed(2)+' mm');
+    set('sDiaOut',dia.toFixed(4)+' mm');
+    set('sPerSpOut',perSp.toFixed(3)+' mm');
+    set('sDenierOut',D.toFixed(1)+' D');
+  }
+}
+
+/* ===== 初始化 ===== */
 sync('ppi');
 calc();
+syncSingle('width');
 </script>
-<div class="footer-note">版权所有 © 王萌｜未经授权禁止商用或二次转发</div>
-</body></html>
+<div class="footer-note">版权所有 © 王萌｜未经授权禁止二次转发</div>
+</body>
+</html>
